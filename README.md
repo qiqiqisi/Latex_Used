@@ -10,6 +10,6 @@ It a project including all LaTeXs I made.
 
 main->system_development_tool_foundation->shell_and_vim
 
-![LaTeX效果图1](https://img.fastmirror.net/s/2025/09/05/68ba7f415490a.png)
+![LaTeX效果图1](assert/7e73b6bc-328b-4047-8866-8576cf4b6771.png)
 
 ![LaTeX效果图2](https://img.fastmirror.net/s/2025/09/05/68ba7f64b5fde.png)
