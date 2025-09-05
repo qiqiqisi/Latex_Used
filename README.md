@@ -12,4 +12,4 @@ main->system_development_tool_foundation->shell_and_vim
 
 ![LaTeX效果图1](assert/7e73b6bc-328b-4047-8866-8576cf4b6771.png)
 
-![LaTeX效果图2](https://img.fastmirror.net/s/2025/09/05/68ba7f64b5fde.png)
+![LaTeX效果图2](assert/b8ff0c19-9d3e-4c97-b0c2-abcd477f4e6a.png)
