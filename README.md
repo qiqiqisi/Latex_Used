@@ -2,6 +2,8 @@
 
 It a project including all LaTeXs I made.
 
+if you want to check sysmtem development tool foundation, check the branch
+
 ## 推荐用来做模板的LaTeX / LaTeX is recommended for templates
 中国海洋大学实验报告模板
 main->system_development_tool_foundation->shell_and_vim
