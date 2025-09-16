@@ -8,7 +8,7 @@ if you want to check sysmtem development tool foundation, check the branch
 中国海洋大学实验报告模板
 main->system_development_tool_foundation->cmd_and_py
 
-![LaTeX效果图3](assert/8e2ffcae-02b1-41cf-a1db-d3080d0215d5.png)
+![LaTeX效果图3](assert/d9fe1302-0fdf-497e-9bde-f5a94f6b4ed4.png)
 
 ![LaTeX效果图2](assert/b24349f8-b8cb-47b3-9af8-53c88b94ac8f.png)
 
