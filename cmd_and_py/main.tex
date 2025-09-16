@@ -1,0 +1,273 @@
+\documentclass{article}
+\usepackage[UTF8]{ctex}
+\usepackage{graphicx}
+\usepackage[top=3cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\definecolor{oucblue}{RGB}{0,84,158}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+    filecolor=blue
+}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\includegraphics[height=0.8cm]{ouc.png}}
+\fancyhead[R]{\nouppercase{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\title{实验报告3}
+\author{伍紫涵}
+
+
+\titleformat{\section}[block]
+{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+
+\begin{document}
+
+
+\begin{titlepage}
+    \centering
+    {\Huge\bfseries 实验报告3 \par}
+    \vspace{2cm}
+    \includegraphics[width=0.7\linewidth]{ouc.png} \par
+    \vspace{0.6cm}
+    {\zihao{2}\bfseries\color{oucblue} 中国海洋大学}\par
+    \vspace{0.5cm}
+    {\LARGE 姓名：伍紫涵 \par}
+    \vspace{0.4cm}
+    {\LARGE 专业：计算机科学与技术 \par}
+    \vspace{0.4cm}
+    {\large \today \par}
+\end{titlepage}
+
+\thispagestyle{plain}
+\begin{abstract}
+{\large
+本文是我学习的关于命令行环境、python入门基础和python视觉应用的实验报告，接下来我会详细地介绍我学习的内容，本文的LaTeX代码已经上传到了\href{https://github.com/qiqiqisi/Latex_Used.git}{github仓库}中，可以点击超链接进行查看。
+}
+\end{abstract}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+{
+\hypersetup{hidelinks}
+\tableofcontents
+}
+
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%---------------------------------------------------------%
+
+\section{命令行环境}
+\subsection{进程的强制停止}
+进程正在进行的时候，按下Ctrl + C的时候会释放SIGINT信号，但是当代码捕获了SIGINT之后就无法停止，使用Ctrl + \\可以强制停止，它释放的是SIGQUIT。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{code_show.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{code_run.png}
+\end{figure}
+
+
+\subsection{进程的暂时停止与继续运行}
+进程正在进行的时候，按下Ctrl + Z的时候就会中止运行，输入fg的时候进程不会从头来过，而是会在上一次的基础上继续运行。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{continue.png}
+\end{figure}
+
+
+\subsection{让进程在后台执行}
+进程中止后，输入bg的时候进程会进入后台继续运行。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{bg.png}
+\end{figure}
+
+\newpage
+\subsection{开辟工作台运行程序}
+输入tmux new -s workspace可以创建工作台，在这个工作台中可以运行程序。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{tmux0.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{tmux.png}
+\end{figure}
+
+\newpage
+\subsection{在工作台中分割页面}
+进入工作台后，按下Ctrl + B，然后如果打出“就可以创建在竖直方向上切割窗口，如果打出的是\%，就会在水平方向上切割窗口。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{split.png}
+\end{figure}
+
+
+\subsection{创建和删除别名}
+使用alias可以创建别名，使用unalias可以删除创建了的别名。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{alias.png}
+\end{figure}
+
+
+\section{python入门基础}
+\subsection{打印语句}
+使用print可以打印语句。
+\begin{figure}  [H]
+    \centering
+    \includegraphics[width=1\linewidth]{print.png}
+\end{figure}
+
+
+\subsection{for循环语句}
+使用for执行循环语句。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{for.png}
+\end{figure}
+
+
+\newpage
+\subsection{while循环语句}
+使用while执行循环语句。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{while.png}
+\end{figure}
+
+
+\newpage
+\subsection{if分支语句}
+使用if执行分支语句。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{if.png}
+\end{figure}
+
+
+\newpage
+\subsection{在列表中使用for语句}
+在列表中使用for语句，减少了行数。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{for_list.png}
+\end{figure}
+
+
+\newpage
+\subsection{在列表的末尾插入数据}
+使用append在列表的末尾插入数据。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{apend.png}
+\end{figure}
+\newpage
+
+
+\subsection{列表自动排序}
+使用sort自动让列表的数据排序。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{sort.png}
+\end{figure}
+
+
+\newpage
+\subsection{判断容器中是否存在某个元素}
+in可以直接判断某个元素是否在容器中。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{in.png}
+\end{figure}
+
+
+\newpage
+\subsection{反转列表中的元素}
+reverse可以反转列表中的元素。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{reverse.png}
+\end{figure}
+
+
+\newpage
+\subsection{获取容器长度}
+len可以获取容器的长度，即是容器中的元素个数。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{len.png}
+\end{figure}
+
+
+\newpage
+\section{python视觉入门}
+\subsection{调整图片的大小}
+使用resize重新调整图片的长和宽。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{resize_code.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{resize_pic.png}
+\end{figure}
+
+
+\newpage
+\subsection{增强对比度}
+使用Contrast增强对比度。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{contrast_code.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{contrast_pic.png}
+\end{figure}
+
+
+\newpage
+\subsection{增强亮度}
+使用Brightness增强亮度。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{brightness_code.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Brightness_pic.png}
+\end{figure}
+
+
+\subsection{增强锐度}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{sharpness.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{sharpness_pic.png}
+\end{figure}
+\end{document}
+
+
+
