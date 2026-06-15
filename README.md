@@ -12,4 +12,8 @@ main->data_structure
 
 ![LaTeX效果图2](assert/b24349f8-b8cb-47b3-9af8-53c88b94ac8f.png)
 
+![Latex效果图2.1](assert/example1.png)
+
+![Latex效果图2.2](assert/example2.png)
+
 ![LaTeX效果图3](assert/image.png)
