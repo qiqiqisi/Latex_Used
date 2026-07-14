@@ -1,0 +1,33 @@
+name: LaTeX build check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "homeworks/**"
+      - ".github/workflows/latex-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile all homework reports with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: |
+            homeworks/01-git-and-latex/main.tex
+            homeworks/02-shell-and-vim/main.tex
+            homeworks/03-command-line-and-python/main.tex
+            homeworks/04-matlab-spectral-analysis/main.tex
+            homeworks/05-data-structure-gcn/main.tex
+          work_in_root_file_dir: true
+          continue_on_error: true
+          latexmk_use_xelatex: true
+
