@@ -1,0 +1,28 @@
+name: LaTeX build check
+
+on:
+  push:
+    branches: [data_structure]
+    paths:
+      - "**.tex"
+      - "assets/**"
+      - "examples/**"
+      - ".github/workflows/latex-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile template with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          latexmk_use_xelatex: true
+

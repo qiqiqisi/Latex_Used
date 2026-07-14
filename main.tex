@@ -1,500 +1,298 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[UTF8,12pt,a4paper]{ctexart}
 
-%===========================================================
-% 基础宏包
-%===========================================================
-\usepackage[UTF8]{ctex}
-\usepackage{graphicx}
-\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
-\usepackage{xcolor}
-\usepackage{titlesec}
+% =========================================================
+% 0. 只需先修改这里：报告信息
+% =========================================================
+\newcommand{\ReportTitle}{课程实验报告}
+\newcommand{\ReportSubtitle}{在这里填写实验题目}
+\newcommand{\ReportHeader}{课程实验报告}
+\newcommand{\CourseName}{课程名称}
+\newcommand{\StudentName}{姓名}
+\newcommand{\StudentID}{学号}
+\newcommand{\Department}{学院 / 专业}
+\newcommand{\Instructor}{指导教师}
+\newcommand{\ReportDate}{\today}
+
+% =========================================================
+% 1. 常用宏包
+% =========================================================
+\usepackage{amsmath,amssymb}
+\usepackage{array,booktabs,tabularx}
+\usepackage{caption,float,graphicx,subcaption}
+\usepackage{enumitem}
 \usepackage{fancyhdr}
+\usepackage{geometry}
 \usepackage{hyperref}
-\usepackage{amsmath}
-\usepackage{amssymb}
+\usepackage{listings}
 \usepackage{setspace}
 \usepackage{tikz}
-\usepackage{float}
-\usepackage{listings}
-\usepackage{array}
-\usepackage{booktabs}
-\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{xcolor}
 
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows.blur}
+\usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
 
-%===========================================================
-% 颜色定义
-%===========================================================
+% =========================================================
+% 2. 页面、颜色与链接
+% =========================================================
+\geometry{top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm}
+\setlength{\headheight}{28pt}
+\onehalfspacing
+
 \definecolor{oucblue}{RGB}{0,84,158}
 \definecolor{ouclight}{RGB}{235,245,255}
-\definecolor{codecomment}{RGB}{0,128,0}
-\definecolor{codekeyword}{RGB}{0,0,255}
-\definecolor{codestring}{RGB}{163,21,21}
-\definecolor{backcolour}{RGB}{250,250,250}
-
-%===========================================================
-% 页面与链接设置
-%===========================================================
-\setlength{\headheight}{28pt}
+\definecolor{codebg}{RGB}{248,249,251}
+\definecolor{codecomment}{RGB}{0,120,80}
+\definecolor{codekeyword}{RGB}{0,72,160}
+\definecolor{codestring}{RGB}{170,70,30}
 
 \hypersetup{
-    colorlinks=true,
-    linkcolor=black,
-    citecolor=black,
-    urlcolor=black
+  colorlinks=true,
+  linkcolor=oucblue,
+  citecolor=oucblue,
+  urlcolor=oucblue,
+  pdftitle={\ReportTitle},
+  pdfauthor={\StudentName}
 }
 
-\captionsetup{
-    font=small,
-    labelfont=bf
-}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=0.35em,topsep=0.5em}
 
-%===========================================================
-% 页眉页脚设置
-%===========================================================
+% =========================================================
+% 3. 页眉、页脚与标题样式
+% =========================================================
 \newcommand{\HeaderLogo}{%
-    \IfFileExists{ouc.png}
-    {\includegraphics[height=0.72cm]{ouc.png}}
+  \IfFileExists{assets/ouc-logo.png}
+    {\includegraphics[height=0.72cm]{assets/ouc-logo.png}}
     {\textcolor{oucblue}{\bfseries OUC}}%
 }
 
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\HeaderLogo}
-\fancyhead[R]{\nouppercase{\small 数据结构与算法实验报告}}
+\fancyhead[R]{\nouppercase{\small\ReportHeader}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
 
-%===========================================================
-% 标题格式
-%===========================================================
-\titleformat{\section}[block]
-{\normalfont\Large\bfseries\color{oucblue}}{\thesection}{1em}{}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{oucblue}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
 
-\titleformat{\subsection}[block]
-{\normalfont\large\bfseries}{\thesubsection}{1em}{}
-
-\titleformat{\subsubsection}[block]
-{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
-
-%===========================================================
-% 行距设置
-%===========================================================
-\onehalfspacing
-
-%===========================================================
-% 代码样式设置
-%===========================================================
-\lstdefinestyle{cppstyle}{
-    language=C++,
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{codekeyword}\bfseries,
-    commentstyle=\color{codecomment}\itshape,
-    stringstyle=\color{codestring},
-    backgroundcolor=\color{backcolour},
-    breaklines=true,
-    breakatwhitespace=false,
-    frame=single,
-    framerule=0.5pt,
-    rulecolor=\color{gray!50},
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    numbersep=10pt,
-    tabsize=4,
-    showstringspaces=false,
-    columns=fullflexible,
-    keepspaces=true,
-    xleftmargin=2em,
-    framexleftmargin=1.5em,
-    captionpos=b
+% =========================================================
+% 4. 代码样式
+% =========================================================
+\lstdefinestyle{reportcode}{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekeyword}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  backgroundcolor=\color{codebg},
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  framerule=0.5pt,
+  rulecolor=\color{black!20},
+  numbers=left,
+  numberstyle=\tiny\color{black!50},
+  numbersep=10pt,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b
 }
+\lstset{style=reportcode}
 
-\lstset{style=cppstyle}
+% 灰色提示文字：完成报告后可直接替换或删除。
+\newcommand{\placeholder}[1]{\textcolor{black!55}{\emph{#1}}}
 
-%===========================================================
-% 正文开始
-%===========================================================
+% =========================================================
+% 5. 正文
+% =========================================================
 \begin{document}
 
-%===========================================================
-% 封面页
-%===========================================================
 \begin{titlepage}
-    \centering
-    \vspace*{1cm}
+  \centering
+  \vspace*{0.8cm}
 
-    {\kaishu\Huge\bfseries 数据结构与算法实验报告 \par}
-    \vspace{0.4cm}
-    {\Large 综合实验：图卷积神经网络（GCN）的实现 \par}
+  {\Huge\bfseries\color{oucblue}\ReportTitle\par}
+  \vspace{0.45cm}
+  {\Large\ReportSubtitle\par}
 
-    \vspace{1.0cm}
+  \vspace{1.1cm}
+  \IfFileExists{assets/ouc-logo.png}{%
+    \includegraphics[width=0.36\linewidth]{assets/ouc-logo.png}\par
+  }{%
+    \fbox{\parbox[c][3cm][c]{6cm}{\centering\Huge OUC}}\par
+  }
 
-    \IfFileExists{ouc.png}
-    {
-        \includegraphics[width=0.42\linewidth]{ouc.png} \par
-    }
-    {
-        \fbox{\parbox[c][3cm][c]{6cm}{\centering\Huge OUC}} \par
-    }
+  \vspace{1.2cm}
+  \renewcommand{\arraystretch}{1.55}
+  \begin{tabular}{>{\bfseries}r l}
+    课程： & \CourseName \\
+    姓名： & \StudentName \\
+    学号： & \StudentID \\
+    院系： & \Department \\
+    教师： & \Instructor \\
+  \end{tabular}
 
-    \vspace{0.4cm}
-
-    {\kaishu\Huge\bfseries 中国海洋大学 \par}
-
-    \vspace{1.2cm}
-
-    \begin{center}
-        \renewcommand{\arraystretch}{1.5}
-        \begin{tabular}{>{\kaishu\LARGE\bfseries}r@{\quad}>{\kaishu\LARGE}l}
-            题\quad\quad 目： & 图卷积神经网络的实现 \\
-            姓\quad\quad 名： &  伍紫涵\\
-            院\quad\quad 系： & 信息科学与工程学部 \\
-        \end{tabular}
-    \end{center}
-
-    \vfill
-    {\large \today \par}
-    \thispagestyle{empty}
+  \vfill
+  {\large\ReportDate\par}
+  \thispagestyle{empty}
 \end{titlepage}
 
-\newpage
 \pagenumbering{arabic}
 \setcounter{page}{1}
-
 \tableofcontents
 \newpage
 
-%===========================================================
-% 一、实验目的
-%===========================================================
 \section{实验目的}
 \begin{itemize}
-    \item 掌握图数据结构的存储与操作，能够熟练运用邻接矩阵或邻接表构建网络拓扑[cite: 3]。
-    \item 深入理解并实现图卷积神经网络（GCN）的基本原理与操作流程[cite: 3]。传统深度学习方法多处理网格状数据，通过本实验掌握如何直接对复杂的非欧几里得图结构数据进行特征提取[cite: 3]。
-    \item 通过图卷积网络了解图数据的信息传播过程（节点如何与邻居节点进行交互与聚合），并借此提高程序设计及数据结构优化应用的能力，探索其在 AI4S（AI for Science）背景下的潜力[cite: 3]。
+  \item \placeholder{说明本实验需要理解的理论知识。}
+  \item \placeholder{说明本实验需要完成的程序、系统或验证任务。}
+  \item \placeholder{说明希望通过实验培养的能力。}
 \end{itemize}
 
-%===========================================================
-% 二、实验要求
-%===========================================================
-\section{实验要求}
-\begin{itemize}
-    \item \textbf{底层图存储构建}：采用邻接矩阵（或邻接表）表示图，掌握基本的图操作（添加/删除边或节点）[cite: 3]。要求支持自定义图的结点数量和图邻接矩阵中保存的连接关系[cite: 3]。
-    \item \textbf{连通性分析}：实现广度优先搜索（BFS）或深度优先搜索（DFS）判断图的连通性[cite: 3]。
-    \item \textbf{稀疏特性优化}：针对图数据稀疏性的特点，实现稀疏矩阵乘法算法，大幅优化图卷积的计算效率，要求核心矩阵乘法是以稀疏矩阵形式进行的[cite: 3]。
-    \item \textbf{GCN核心前向传播}：实现一个简化版的 GCN，通过计算并使用归一化邻接矩阵和节点特征矩阵，对节点特征进行逐层更新；利用 ReLU 函数引入非线性映射[cite: 3]。
-\end{itemize}
+\section{实验环境}
+\begin{table}[H]
+  \centering
+  \caption{实验环境示例}
+  \begin{tabularx}{0.88\linewidth}{>{\bfseries}l X}
+    \toprule
+    项目 & 配置 \\
+    \midrule
+    操作系统 & \placeholder{Windows / macOS / Linux} \\
+    开发工具 & \placeholder{VS Code、MATLAB、PyCharm 等} \\
+    语言与版本 & \placeholder{C++17、Python 3.12 等} \\
+    其他依赖 & \placeholder{第三方库、硬件或数据集} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
 
-%===========================================================
-% 三、实验内容与实验步骤
-%===========================================================
-\section{实验内容与实验步骤}
+\section{实验原理}
+\placeholder{用自己的语言概括核心原理，并给出必要的公式、符号定义和参考资料。}
 
-\subsection{需求分析}
-根据实验指导书要求，本程序主要完成如下任务[cite: 1, 2, 3]：
+例如，一个带编号的公式可以写成：
+\begin{equation}
+  y = \sigma(Wx+b).
+  \label{eq:example}
+\end{equation}
+正文中可以使用“式~\eqref{eq:example}”交叉引用。
+
+\section{实验设计与步骤}
 \begin{enumerate}
-    \item \textbf{输入形式与规模}：预设输入为一个含有 6 个节点的无向图，程序需初始化该图的邻接矩阵[cite: 1]。每个节点拥有一组特征向量，如输入维度初始设定为 4[cite: 1]。
-    \item \textbf{程序功能模块}：
-    \begin{itemize}
-        \item \textbf{图管理模块}：构建图结构并能动态演示添加和删除特定边（例如节点 2 与 3 之间）[cite: 1]。
-        \item \textbf{连通性模块}：通过 DFS 与 BFS 打印节点遍历顺序，并输出连通分量判断结果[cite: 1]。
-        \item \textbf{矩阵转换模块}：能够将普通的二维稠密矩阵转换为基于行逻辑链接顺序表的稀疏矩阵（\texttt{RLSMatrix}），计算稀疏度[cite: 1]。
-        \item \textbf{GCN 网络层模块}：根据特征矩阵 $X$ 和权重矩阵 $W$，计算第一层卷积特征输出，并演示连续堆叠两层 GCN 最终输出 2 维节点嵌入特征（Embedding）的过程[cite: 1, 3]。
-    \end{itemize}
-    \item \textbf{输出形式}：采用终端标准输出流，格式化打印每一步矩阵的运算结果与图的状态信息[cite: 1]。
+  \item \placeholder{步骤一：准备数据或初始化环境。}
+  \item \placeholder{步骤二：实现核心算法或操作。}
+  \item \placeholder{步骤三：记录结果并进行对比。}
 \end{enumerate}
 
-\subsection{概要设计}
-为实现上述功能，程序在数据结构上设计了如下核心组件[cite: 1]：
-\begin{itemize}
-    \item \texttt{MGraph}：采用邻接矩阵法存储图，内置二维数组 \texttt{arcs} 与当前节点、边数信息，适用于 GCN 中频繁的矩阵运算[cite: 1]。
-    \item \texttt{ALGraph}：采用邻接表法存储图，用于 DFS 和 BFS 的高效遍历，其核心结构为 \texttt{ArcNode} 链表[cite: 1]。
-    \item \texttt{RLSMatrix}：三元组顺序表，加入了行指针数组 \texttt{rpos}，用于加速稀疏矩阵与稠密特征矩阵的乘积运算[cite: 1]。
-    \item \texttt{GCNLayer}：封装单层 GCN 的参数，包含输入/输出维度、权重矩阵指针 $W$ 以及层特定的归一化邻接矩阵 $\tilde{A}$（代码中记为 \texttt{A\_norm}）[cite: 1]。
-\end{itemize}
-
-%===========================================================
-% 四、算法理论与详细设计
-%===========================================================
-\section{算法理论与详细设计}
-
-\subsection{GCN 的数学推导与计算过程}
-图卷积神经网络的核心在于“特征聚合”与“非线性变换”[cite: 3]。其单层前向传播可以用如下公式高度概括：
-\[ H' = \sigma(\tilde{A}XW) \]
-具体计算步骤分为以下三个阶段[cite: 3]：
-\begin{enumerate}
-    \item \textbf{归一化邻接矩阵计算}：
-    为了保证信息聚合时大度数节点与小度数节点特征数值的稳定性，首先需要为图添加自环，得到 $A' = A + I$[cite: 3]。
-    接着计算度矩阵 $D$，其中 $D_{ii} = \sum_j A'_{ij}$[cite: 3]。
-    最后进行对称归一化：
-    \[ \tilde{A} = D^{-1/2} A' D^{-1/2} \]
-    这一步保证了图上信息的稳定传递[cite: 3]。
-    
-    \item \textbf{特征聚合与线性变换}：
-    在代码实现中，计算 $\tilde{A}X$ 是将每个节点的特征与邻居节点信息进行聚合[cite: 3]。随后乘以权重矩阵 $W$，对聚合后的特征执行线性映射，使得特征从原先的 $in\_dim$ 维度变换至 $out\_dim$ 维度[cite: 3]。
-    
-    \item \textbf{非线性激活}：
-    采用 ReLU 激活函数 $\text{ReLU}(x) = \max(0, x)$ 处理线性映射后的结果[cite: 3]。这赋予了网络深层特征抽取的非线性能力，将所有的负值特征置零[cite: 3]。
-\end{enumerate}
-
-\subsection{算法流程与网络拓扑结构}
-
-为了直观展示程序的运行逻辑，绘制了单层 GCN 的算法流程图与本实验采用的 6 节点网络拓扑结构。
+\subsection{可复用流程图（TikZ 节点）}
+下面的流程图不依赖外部图片，可直接修改节点文字、增删节点或调整箭头。
 
 \begin{figure}[H]
-    \centering
-    \begin{tikzpicture}[
-        node distance=0.6cm,
-        >=Latex,
-        font=\small,
-        block/.style={
-            draw=oucblue, line width=1pt, rounded corners=3pt,
-            fill=ouclight, align=center,
-            minimum width=7.0cm, minimum height=0.8cm, % 调整框体宽度以防文字溢出
-            blur shadow={shadow blur steps=4, shadow opacity=0.15}
-        },
-        startend/.style={
-            block, fill=oucblue, text=white, rounded corners=12pt, minimum width=4cm
-        },
-        arrow/.style={->, line width=1pt, color=oucblue}
-    ]
-        \node[startend] (start) {开始 GCN 前向传播};
-        \node[block, below=of start] (step1) {1. 获取特征 $X$ 与邻接矩阵 $A$};
-        \node[block, below=of step1] (step2) {2. 添加自环 $A' = A + I$ \\ 计算度矩阵 $D$ 及其逆平方根};
-        \node[block, below=of step2] (step3) {3. 计算归一化矩阵 $\tilde{A} = D^{-1/2} A' D^{-1/2}$ \\ 并转换为 \texttt{RLSMatrix} 稀疏存储};
-        \node[block, below=of step3] (step4) {4. 邻居聚合计算：$Z_1 = \tilde{A} \times X$ \\ (利用 \texttt{SpMatMulDense} 加速)};
-        \node[block, below=of step4] (step5) {5. 空间映射：$Z_2 = Z_1 \times W$};
-        \node[block, below=of step5] (step6) {6. 激活函数截断：$H = \text{ReLU}(Z_2)$};
-        \node[startend, below=of step6] (end) {输出本层特征矩阵 $H$};
+  \centering
+  \begin{tikzpicture}[
+    node distance=8mm,
+    >=Latex,
+    font=\small,
+    process/.style={
+      rectangle,rounded corners=3pt,draw=oucblue,fill=ouclight,
+      minimum width=6.2cm,minimum height=0.82cm,align=center
+    },
+    decision/.style={
+      diamond,aspect=2.4,draw=oucblue,fill=ouclight,
+      minimum width=4.0cm,minimum height=0.9cm,align=center
+    },
+    terminal/.style={
+      process,fill=oucblue,text=white,rounded corners=12pt,
+      minimum width=3.3cm
+    },
+    flow/.style={->,line width=1pt,color=oucblue}
+  ]
+    \node[terminal] (start) {开始};
+    \node[process,below=of start] (input) {读取输入并完成初始化};
+    \node[decision,below=of input,yshift=-1mm] (check) {条件是否满足？};
+    \node[process,below left=11mm and -4mm of check] (adjust) {调整参数};
+    \node[process,below right=11mm and -4mm of check] (run) {执行核心步骤};
+    \node[terminal,below=24mm of check] (finish) {输出结果};
 
-        \draw[arrow] (start) -- (step1);
-        \draw[arrow] (step1) -- (step2);
-        \draw[arrow] (step2) -- (step3);
-        \draw[arrow] (step3) -- (step4);
-        \draw[arrow] (step4) -- (step5);
-        \draw[arrow] (step5) -- (step6);
-        \draw[arrow] (step6) -- (end);
-    \end{tikzpicture}
-    \caption{单层图卷积神经网络(GCN)前向传播计算流程}
+    \draw[flow] (start) -- (input);
+    \draw[flow] (input) -- (check);
+    \draw[flow] (check) -| node[pos=0.25,above]{否} (adjust);
+    \draw[flow] (adjust) |- (input);
+    \draw[flow] (check) -| node[pos=0.25,above]{是} (run);
+    \draw[flow] (run) |- (finish);
+  \end{tikzpicture}
+  \caption{通用实验流程图模板}
+  \label{fig:flowchart}
 \end{figure}
 
-本实验设定的图拥有 6 个节点（编号 0 到 5），初始连接关系拓扑结构如下：
+\subsection{可复用关系图（圆形节点）}
+这个例子适合画数据结构、网络拓扑、状态转移或模块依赖关系。
+
 \begin{figure}[H]
-    \centering
-    \begin{tikzpicture}[
-        every node/.style={font=\large\bfseries},
-        node/.style={circle, draw=oucblue, fill=ouclight, line width=1.5pt, minimum size=1.0cm},
-        edge/.style={line width=1.5pt, color=oucblue}
-    ]
-        % 定义坐标
-        \node[node] (n0) at (0, 2) {0};
-        \node[node] (n1) at (3, 2) {1};
-        \node[node] (n2) at (6, 2) {2};
-        \node[node] (n3) at (0, -1) {3};
-        \node[node] (n4) at (3, -1) {4};
-        \node[node] (n5) at (6, -1) {5};
+  \centering
+  \begin{tikzpicture}[
+    graphnode/.style={
+      circle,draw=oucblue,fill=ouclight,line width=1.2pt,
+      minimum size=10mm,font=\bfseries
+    },
+    graphlink/.style={line width=1.2pt,color=oucblue},
+    >=Latex
+  ]
+    \node[graphnode] (a) at (0,1.7) {A};
+    \node[graphnode] (b) at (3,1.7) {B};
+    \node[graphnode] (c) at (6,1.7) {C};
+    \node[graphnode] (d) at (1.5,-0.6) {D};
+    \node[graphnode] (e) at (4.5,-0.6) {E};
 
-        % 连线
-        \draw[edge] (n0) -- (n1);
-        \draw[edge] (n1) -- (n2);
-        \draw[edge] (n0) -- (n3);
-        \draw[edge] (n1) -- (n4);
-        \draw[edge] (n2) -- (n5);
-        \draw[edge] (n3) -- (n4);
-        \draw[edge] (n4) -- (n5);
-    \end{tikzpicture}
-    \caption{实验基础拓扑：6节点无向连通图}
+    \draw[graphlink] (a) -- node[above]{1} (b);
+    \draw[graphlink] (b) -- node[above]{2} (c);
+    \draw[graphlink] (a) -- (d);
+    \draw[graphlink] (b) -- (d);
+    \draw[graphlink] (b) -- (e);
+    \draw[graphlink] (c) -- (e);
+    \draw[graphlink,->] (d) -- node[below]{方向可选} (e);
+  \end{tikzpicture}
+  \caption{通用节点关系图模板}
+  \label{fig:network}
 \end{figure}
 
-\subsection{源程序与核心代码实现}
-为了在 C++ 中高效计算，实验中特别设计了 CSR 格式的稀疏稠密矩阵乘积算法（\texttt{SpMatMulDense}），有效跳过图结构中的大量零元素[cite: 1]。
+\section{核心代码}
+推荐把较长的程序放进独立文件，再由 LaTeX 引入；这样报告和可运行代码可以保持同步。
 
-\begin{lstlisting}[caption={稀疏矩阵乘法与GCN前向传播核心代码片段}]
-// 稀疏矩阵(行逻辑链接顺序表) 乘 稠密矩阵
-double* SpMatMulDense(RLSMatrix &A, double *B, int B_nu) {
-    double *C = new double[A.mu * B_nu]();   // 结果矩阵 C 初始化为全零
-    for (int arow = 0; arow < A.mu; ++arow) {
-        // 利用 rpos 数组，仅遍历第 arow 行的非零元素，大幅提升图计算效率
-        int tp = (arow + 1 < A.mu) ? A.rpos[arow + 1] : A.tu;                    
-        for (int p = A.rpos[arow]; p < tp; ++p) {
-            int brow = A.data[p].j;          
-            double aval = A.data[p].e;       
-            for (int ccol = 0; ccol < B_nu; ++ccol)
-                C[arow * B_nu + ccol] += aval * B[brow * B_nu + ccol];
-        }
-    }
-    return C;
-}
+\lstinputlisting[
+  language=C++,
+  caption={外部代码文件引用示例},
+  label={lst:example}
+]{examples/example.cpp}
 
-// GCN 前向传播实现
-double* GCNForward(GCNLayer &layer, double *X, int n) {
-    int in_dim = layer.in_dim, out_dim = layer.out_dim;
-    
-    // 步骤1: 稀疏特征聚合 Z1 = A_norm * X
-    double *Z1 = SpMatMulDense(layer.A_norm, X, in_dim);
-    
-    // 步骤2: 稠密特征映射 Z2 = Z1 * W
-    double *Z2 = new double[n * out_dim]();
-    for (int i = 0; i < n; ++i) {                
-        for (int k = 0; k < in_dim; ++k) {       
-            if (Z1[i * in_dim + k] == 0.0) continue;          
-            for (int j = 0; j < out_dim; ++j)    
-                Z2[i * out_dim + j] += Z1[i * in_dim + k] * layer.W[k][j];
-        }
-    }
-    
-    // 步骤3: ReLU 激活函数截断
-    ReLU(Z2, n * out_dim);
-    
-    delete[] Z1;       
-    return Z2;         
-}
+如果只展示少量片段，也可以直接使用 \texttt{lstlisting} 环境：
+\begin{lstlisting}[language=Python,caption={内嵌代码示例}]
+def summarize(values):
+    return sum(values) / len(values)
 \end{lstlisting}
 
-%===========================================================
-% 五、调试分析
-%===========================================================
-\section{调试分析}
+\section{实验结果与分析}
+\placeholder{插入关键截图、表格或曲线；解释“结果说明了什么”，不要只贴图。}
 
-\subsection{调试过程中遇到的问题}
-\begin{itemize}
-    \item \textbf{除零异常风险防范}：在代码最初的测试阶段，如果图是不连通的（出现孤立节点），且在归一化时不增加自环，该孤立节点的度数将为 0[cite: 1]。这将导致后续计算 $D^{-1/2}$ 时出现除零崩溃[cite: 1]。解决方法是严格遵守数学定义 $A' = A + I$（强行注入自环），并在代码中加入了 \texttt{if(D\_hat[i] <= 0.0) D\_hat[i] = 1.0;} 的兜底保护机制[cite: 1, 3]。
-    \item \textbf{遍历覆盖问题}：实验发现图若处于分离状态，单纯从节点 0 启动 DFS 会导致部分节点遗漏[cite: 1]。解决方案是外层封装 \texttt{DFSTraverse}，通过循环扫描 \texttt{visited} 数组，一旦发现 \texttt{FALSE} 即视为新连通分量，重新启动 DFS[cite: 1]。
-\end{itemize}
+插入图片时，可以把文件放进 \texttt{assets/}，再使用：
+\begin{quote}
+  \ttfamily\textbackslash includegraphics[width=0.8\textbackslash linewidth]\{assets/your-image.png\}
+\end{quote}
 
-\subsection{算法复杂度分析}
-\begin{itemize}
-    \item \textbf{时间复杂度}：传统情况下，若完全使用稠密矩阵相乘，计算 $\tilde{A}X$ 需要 $O(|V|^2 \times d)$ 的时间（$|V|$ 为节点总数，$d$ 为特征维度）[cite: 1]。本实验在 \texttt{SpMatMulDense} 中利用 \texttt{rpos} 指针数组直接跳跃遍历稀疏图的边集 $E$，将特征聚合的计算复杂度成功降至 $O(|E| \times d)$，这在庞大但稀疏的社交网络数据中具有极高的优化价值[cite: 1]。
-    \item \textbf{空间复杂度}：二维邻接矩阵需常驻 $O(|V|^2)$ 的内存空间[cite: 1]。通过实现 \texttt{RLSMatrix} 仅存储有价值的三元组，空间复杂度退化为 $O(|E|)$，极大地节省了显存/内存资源的消耗[cite: 1]。
-\end{itemize}
+\section{问题与解决方法}
+\begin{enumerate}
+  \item \textbf{问题：}\placeholder{描述现象和复现条件。}
+  
+  \textbf{原因：}\placeholder{说明定位过程和根因。}
+  
+  \textbf{解决：}\placeholder{说明最终修改及验证方式。}
+\end{enumerate}
 
-%===========================================================
-% 六、实验结果与详细解析
-%===========================================================
-\section{实验结果与详细解析}
-
-\subsection{实验一：图的存储验证}
-程序首先输出预设图的邻接矩阵（大小 $6\times 6$），随后测试了加边操作与删边操作[cite: 1, 4]。
-
-\textbf{1. 初始图邻接矩阵（边数：7）}
-\[
-A_{initial} = \begin{bmatrix}
-0 & 1 & 0 & 1 & 0 & 0 \\
-1 & 0 & 1 & 0 & 1 & 0 \\
-0 & 1 & 0 & 0 & 0 & 1 \\
-1 & 0 & 0 & 0 & 1 & 0 \\
-0 & 1 & 0 & 1 & 0 & 1 \\
-0 & 0 & 1 & 0 & 1 & 0 
-\end{bmatrix}
-\]
-
-\textbf{2. 添加边 (2, 3) 后的矩阵（边数：8）}
-\[
-A_{add} = \begin{bmatrix}
-0 & 1 & 0 & 1 & 0 & 0 \\
-1 & 0 & 1 & 0 & 1 & 0 \\
-0 & 1 & \mathbf{0} & \mathbf{1} & 0 & 1 \\
-1 & 0 & \mathbf{1} & \mathbf{0} & 1 & 0 \\
-0 & 1 & 0 & 1 & 0 & 1 \\
-0 & 0 & 1 & 0 & 1 & 0 
-\end{bmatrix}
-\]
-
-\textbf{解析}：第一步成功初始化基础图[cite: 4]。在添加边 (2, 3) 时，由于无向图的对称性，矩阵第 2 行第 3 列和第 3 行第 2 列同时由 0 变为 1，总边数由 7 增加至 8[cite: 4]。之后执行删除操作又恢复原样，证明底层图管理模块健壮可靠[cite: 4]。
-
-\subsection{实验二：连通性判断}
-
-基于图的拓扑结构，程序通过算法得到以下遍历序列[cite: 1, 4]：
-\begin{itemize}
-    \item \textbf{深度优先遍历 (DFS)}：$0 \rightarrow 1 \rightarrow 2 \rightarrow 5 \rightarrow 4 \rightarrow 3$[cite: 4]
-    \item \textbf{广度优先遍历 (BFS)}：$0 \rightarrow 1 \rightarrow 3 \rightarrow 2 \rightarrow 4 \rightarrow 5$[cite: 4]
-\end{itemize}
-\textbf{判断结果}：该图为 \textbf{连通图}[cite: 4]。
-\textbf{解析}：通过深度优先算法（一走到底）与广度优先算法（层级辐射）两种方式遍历图的所有节点[cite: 1, 4]。所有的节点仅通过 1 次启动调用即全部被标记访问，成功证明了当前拓扑网络是一个完整的连通图[cite: 1, 4]。
-
-\subsection{实验三：稀疏矩阵与邻居聚合原理验证}
-
-程序将原有的稠密邻接矩阵转化为稀疏表示列表，准确找到了所有的 14 个非零点映射（含双向），计算得出稀疏度为 $14/36 = 38.9\%$[cite: 4]。
-
-为了演示图卷积最核心的“邻居特征聚合”原理，程序人工构造了如下的测试特征矩阵 $TestVec$[cite: 4]：
-\[
-TestVec = \begin{bmatrix} 1 & 0 \\ 1 & 1 \\ 1 & 2 \\ 1 & 3 \\ 1 & 4 \\ 1 & 5 \end{bmatrix}
-\]
-
-运用稀疏矩阵乘法函数 $A_{sparse} \times TestVec$ 得到的聚合结果为[cite: 4]：
-\[
-Result = \begin{bmatrix}
-2.0000 & 4.0000 \\
-3.0000 & 6.0000 \\
-2.0000 & 6.0000 \\
-2.0000 & 4.0000 \\
-3.0000 & 9.0000 \\
-2.0000 & 6.0000 
-\end{bmatrix}
-\]
-\textbf{解析}：以节点 0 为例，根据稀疏矩阵，其存在连接的邻居为节点 1 和节点 3[cite: 4]。通过矩阵乘法，实际上完成的是相邻节点特征的简单累加[cite: 4]：
-\[ \text{节点 0 聚合} = TestVec[1] + TestVec[3] = \begin{bmatrix} 1 & 1 \end{bmatrix} + \begin{bmatrix} 1 & 3 \end{bmatrix} = \begin{bmatrix} 2 & 4 \end{bmatrix} \]
-可以看到输出结果的第一行确为 `2.0000 4.0000`，完美印证了“图矩阵乘以特征矩阵等价于邻居特征加和”的代数本质[cite: 4]。
-
-\subsection{实验四：核心算法 GCN 前向传播详解}
-
-本实验通过构造 $6 \times 4$ 特征矩阵 $X$ 和随机初始化的 $4 \times 3$ 权重矩阵 $W$，详细展现了单层 GCN 的全貌[cite: 4]：
-
-\textbf{1. 归一化邻接矩阵 $\tilde{A}$（选取部分关键数值展示）}
-\[
-\tilde{A} = \begin{bmatrix}
-0.3333 & 0.2887 & 0 & 0.3333 & \dots \\
-0.2887 & 0.2500 & 0.2887 & 0 & \dots \\
-\dots & \dots & \dots & \dots & \dots
-\end{bmatrix}
-\]
-\textbf{深入解析：归一化系数的来源}
-在 $\tilde{A}$ 的输出中，各种奇异的浮点数并非随机，而是源于公式 $\tilde{A}_{ij} = \frac{1}{\sqrt{D_i \times D_j}}$[cite: 3, 4]：
-\begin{itemize}
-    \item 节点 0 初始连接了 1 和 3，注入单位矩阵自环 $I$ 后，连接了 0、1、3，度 $D_0 = 3$[cite: 4]。
-    \item 节点 1 初始连接了 0、2、4，注入自环后，连接了 0、1、2、4，度 $D_1 = 4$[cite: 4]。
-    \item \textbf{自环归一化}：节点 0 对自己的特征归一化为 $\frac{1}{\sqrt{3 \times 3}} \approx 0.3333$[cite: 4]。节点 1 为 $\frac{1}{\sqrt{4 \times 4}} = 0.2500$[cite: 4]。
-    \item \textbf{边归一化}：节点 0 传递信息给节点 1 时，归一化权重为 $\frac{1}{\sqrt{3 \times 4}} = \frac{1}{\sqrt{12}} \approx 0.2887$[cite: 4]。计算结果与输出完全一致，验证了算法的严谨性[cite: 4]。
-\end{itemize}
-
-\textbf{2. 最终激活输出矩阵 $H = \text{ReLU}(\tilde{A} \times X \times W)$}
-\[
-H = \begin{bmatrix}
-0.0000 & 0.0000 & 0.1648 \\
-0.0000 & 0.0000 & 0.0504 \\
-0.2202 & 0.0000 & 0.0000 \\
-0.0000 & 0.0000 & 0.3636 \\
-0.0000 & 0.0000 & 0.0000 \\
-0.0000 & 0.0000 & 0.0000 
-\end{bmatrix}
-\]
-\textbf{深入解析：ReLU激活函数的效果}
-输出矩阵 $H$ 出现了大量的 `0.0000`[cite: 4]。这是因为输入的特征 $\tilde{A}X$ 与权重 $W$ 相乘（线性组合）后，产生的原始数值含有许多负数[cite: 4]。根据 ReLU 的定义 $\max(0, x)$，所有的负数都在这一步被激活函数截断为了 0，成功引入了模型的非线性特征[cite: 3, 4]。
-
-\subsection{实验五：多层GCN网络堆叠降维}
-
-将第一层的三维特征输出作为第二层 GCN 的输入，重新初始化一个 $3\times 2$ 维度的权重张量 $W$[cite: 4]。最终提取出的特征如下：
-\[
-H_{layer2} = \begin{bmatrix}
-0.0000 & 0.0000 \\
-0.0147 & 0.0000 \\
-0.0545 & 0.0000 \\
-0.0000 & 0.0000 \\
-0.0000 & 0.0000 \\
-0.0644 & 0.0000 
-\end{bmatrix}
-\]
-\textbf{解析}：经过第二层聚合映射，所有节点的特征维数被压缩至 2 维[cite: 4]。这一维度的输出结果通常在科研中被直接用作二维散点坐标，实现图特征的 Embedding 空间可视化[cite: 3]。
-
-%===========================================================
-% 七、实验总结
-%===========================================================
 \section{实验总结}
-\begin{itemize}
-    \item \textbf{关于图底层结构的夯实}：通过本次实验，我深刻掌握了传统的图结构表示法（邻接矩阵、邻接表）。代码层面的实现使得 DFS/BFS 等抽象算法原理得到了充分的落地验证，为后续算法的开展打下了坚实的数据结构基础[cite: 1, 3]。
-    \item \textbf{对图结构计算的稀疏优化}：通过亲自实现 CSR 结构的 \texttt{RLSMatrix} 三元组顺序表及其乘法计算过程，我切身体会到了跳过无效零点计算能够给运行速度带来的质变提升[cite: 1]。这也是为什么图神经网络等应用都严重依赖稀疏矩阵运算的本质原因[cite: 1, 3]。
-    \item \textbf{深入理解 GCN 的数学逻辑}：本次实验最大的收获在于拆解并验证了 GCN 框架的数学底层[cite: 3]。无论是为了防止梯度爆炸而加入的对角线自环 $I$、保证权重平衡而采用度数平方根倒数的巧妙设计，还是通过图邻接矩阵实现邻居加权和特征聚合，以及最后运用 ReLU 所展示的非线性截断现象，都让我真正明白了深度学习中每一个公式为什么存在，及其背后的真实物理意义[cite: 3, 4]。
-\end{itemize}
+\placeholder{总结完成的工作、主要收获、仍可改进的地方，以及下一步计划。}
 
 \end{document}
+
