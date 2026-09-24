@@ -1,0 +1,29 @@
+name: LaTeX build check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - main.tex
+      - ouc.png
+      - ouc_font.png
+      - .github/workflows/latex-check.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - main.tex
+      - ouc.png
+      - ouc_font.png
+      - .github/workflows/latex-check.yml
+  workflow_dispatch:
+
+jobs:
+  build-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compile template with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          latexmk_use_xelatex: true

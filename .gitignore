@@ -1,0 +1,38 @@
+# LaTeX generated files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+main.pdf
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local-only materials and EDA build output
+references/
+artifacts/
+tmp/
+.Xil/
+*.jou
+*.wdb
+*.vcd
+*.sdb
+*.o
+*.obj
+*.exe
+
+# Local agent and publishing files
+.publish-*
+.agents/
+AGENT.md

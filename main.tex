@@ -1,0 +1,127 @@
+\documentclass[12pt,a4paper]{article}
+
+% 编译方式：XeLaTeX（建议连续编译两次以更新目录）
+\usepackage[UTF8,fontset=windows]{ctex}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setCJKmainfont{SimSun}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array,booktabs,longtable}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{notegray}{RGB}{100,100,100}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.3em}
+\linespread{1.35}
+\renewcommand{\arraystretch}{1.35}
+\captionsetup{font=small,labelfont=bf}
+\setlist[itemize]{leftmargin=2em}
+\setlist[enumerate]{leftmargin=2.4em}
+\titleformat{\section}{\heiti\zihao{4}}{\thesection}{0.75em}{}
+\titleformat{\subsection}{\heiti\zihao{-4}}{\thesubsection}{0.75em}{}
+\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{0.75em}{}
+
+% 只需修改这一组信息。
+\newcommand{\ReportTitle}{待填写的题目}
+\newcommand{\CourseName}{待填写的课程名称}
+\newcommand{\Semester}{待填写的学期}
+\newcommand{\StudentName}{待填写的姓名}
+\newcommand{\StudentId}{待填写的学号}
+\newcommand{\Instructor}{待填写的指导教师}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\raisebox{-0.12cm}{\IfFileExists{ouc.png}{\includegraphics[height=0.72cm]{ouc.png}}{}}}
+\fancyhead[C]{\zihao{-5}\ReportTitle}
+\fancyfoot[C]{\zihao{-5}\StudentName\quad \StudentId\quad 第\thepage\ 页}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{28pt}
+
+\begin{document}
+\zihao{-4}
+
+%============================== 封面 ==============================
+\begin{titlepage}
+  \centering
+  \vspace*{1.25cm}
+  {\heiti\zihao{2} \Semester\par}
+  \vspace{0.5cm}
+  {\heiti\zihao{2} \CourseName\par}
+  \vspace{0.25cm}
+  {\heiti\zihao{2} 实验报告\par}
+  \vspace{1.1cm}
+  \IfFileExists{ouc.png}{\includegraphics[width=0.42\linewidth]{ouc.png}\par}{\fbox{\rule{0pt}{3cm}学校标识}\par}
+  \vspace{0.28cm}
+  \IfFileExists{ouc_font.png}{\includegraphics[width=0.48\linewidth]{ouc_font.png}\par}{}
+  \vspace{1.45cm}
+  \begin{tabular}{>{\heiti\zihao{3}}r@{\quad}>{\zihao{3}}l}
+    题\quad 目： & {\heiti\zihao{4}\ReportTitle} \\[0.55cm]
+    姓\quad 名： & \StudentName \\[0.55cm]
+    学\quad 号： & \StudentId \\[0.55cm]
+    指导教师： & \Instructor \\
+  \end{tabular}
+  \vfill
+  \thispagestyle{empty}
+\end{titlepage}
+
+\clearpage
+\thispagestyle{empty}
+\setcounter{tocdepth}{2}
+\tableofcontents
+\clearpage
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+\section{实验概述}
+\subsection{实验目的}
+\textcolor{notegray}{待填写：说明本实验要解决的问题、预期能力或验证目标。}
+
+\subsection{实验环境}
+\textcolor{notegray}{待填写：列出操作系统、软件版本、硬件或数据集等可复现实验条件。}
+
+\section{实验原理与设计}
+\textcolor{notegray}{待填写：说明关键原理、总体方案、模块关系或算法流程。不要把未实际采用的方案写成实现事实。}
+
+\begin{figure}[H]
+  \centering
+  \fbox{\rule{0pt}{5cm}\rule{0.85\linewidth}{0pt}}
+  \caption{待填写的图题}
+  \label{fig:placeholder}
+\end{figure}
+
+\section{实验步骤与实现}
+\begin{enumerate}
+  \item \textcolor{notegray}{待填写：步骤一。}
+  \item \textcolor{notegray}{待填写：步骤二。}
+  \item \textcolor{notegray}{待填写：步骤三。}
+\end{enumerate}
+
+\section{实验结果与分析}
+\textcolor{notegray}{待填写：给出真实的测试条件、结果、证据及其分析；未完成的测试应明确标注，不要补写为已完成。}
+
+\begin{table}[H]
+  \centering
+  \caption{待填写的结果表}
+  \label{tab:placeholder}
+  \begin{tabular}{lll}
+    \toprule
+    指标 & 结果 & 说明 \\
+    \midrule
+    待填写 & 待填写 & 待填写 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{实验心得}
+\textcolor{notegray}{待填写：记录实际遇到的问题、处理过程、局限性和后续改进。}
+
+\end{document}
