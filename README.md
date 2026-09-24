@@ -24,9 +24,19 @@
 
 ## 模板效果示例
 
-下图展示目录的排版效果。提供的封面和正文截图含真实姓名、学号或页脚信息，故未作为公开 README 素材使用。
+下列截图展示模板的封面、目录和正文排版效果。封面与正文包含报告作者的真实姓名、学号和页脚信息，已按作者明确授权原样公开。
+
+### 封面
+
+![封面排版示例](docs/screenshots/cover-example.png)
+
+### 目录
 
 ![目录排版示例](docs/screenshots/table-of-contents-example.png)
+
+### 正文
+
+![正文排版示例](docs/screenshots/body-example.png)
 
 ## 分支说明
 
