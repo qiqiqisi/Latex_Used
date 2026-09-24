@@ -1,0 +1,466 @@
+\documentclass[12pt,a4paper]{article}
+
+% 编译方式：XeLaTeX（建议连续编译两次以更新目录）
+\usepackage[UTF8,fontset=windows]{ctex}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setCJKmainfont{SimSun}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array,booktabs,longtable}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{notegray}{RGB}{100,100,100}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.3em}
+\linespread{1.35}
+\renewcommand{\arraystretch}{1.35}
+\captionsetup{font=small,labelfont=bf}
+\setlist[itemize]{leftmargin=2em}
+\setlist[enumerate]{leftmargin=2.4em}
+
+% 按课程要求：标题黑体四号；正文宋体、英文及数字 Times New Roman、小四。
+\titleformat{\section}{\heiti\zihao{4}}{\thesection}{0.75em}{}
+\titleformat{\subsection}{\heiti\zihao{-4}}{\thesubsection}{0.75em}{}
+\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{0.75em}{}
+
+\newcommand{\ReportTitle}{《计算机系统综合实践Ⅰ》实验报告}
+\newcommand{\StudentName}{待填写的姓名}
+\newcommand{\StudentId}{待填写的学号}
+\newcommand{\Instructor}{待填写的指导教师}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\raisebox{-0.12cm}{\IfFileExists{ouc.png}{\includegraphics[height=0.72cm]{ouc.png}}{}}}
+\fancyhead[C]{\zihao{-5}\ReportTitle}
+\fancyfoot[C]{\zihao{-5}\StudentName\quad \StudentId\quad 第\thepage\ 页}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{28pt}
+% 处理整页图框等场景可能切换到 plain 页式的情况，确保正文页眉页脚一致。
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{\raisebox{-0.12cm}{\IfFileExists{ouc.png}{\includegraphics[height=0.72cm]{ouc.png}}{}}}
+  \fancyhead[C]{\zihao{-5}\ReportTitle}
+  \fancyfoot[C]{\zihao{-5}\StudentName\quad \StudentId\quad 第\thepage\ 页}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+\begin{document}
+\zihao{-4}
+
+%============================== 封面 ==============================
+\begin{titlepage}
+  \centering
+  \vspace*{1.25cm}
+  {\heiti\zihao{2} 2026夏季学期\par}
+  \vspace{0.5cm}
+  {\heiti\zihao{2} 计算机系统综合实践Ⅰ\par}
+  \vspace{0.25cm}
+  {\heiti\zihao{2} 实验报告\par}
+  \vspace{1.1cm}
+
+  \IfFileExists{ouc.png}{\includegraphics[width=0.42\linewidth]{ouc.png}\par}{\fbox{\rule{0pt}{3cm}OUC}\par}
+  \vspace{0.28cm}
+  \IfFileExists{ouc_font.png}{\includegraphics[width=0.48\linewidth]{ouc_font.png}\par}{\par}
+  \vspace{1.45cm}
+
+  \begin{tabular}{>{\heiti\zihao{3}}r@{\quad}>{\zihao{3}}l}
+    题\quad 目： & {\heiti\zihao{4} MiniMIPS32五级流水线处理器设计与实现} \\[0.55cm]
+    姓\quad 名： & \StudentName \\[0.55cm]
+    学\quad 号： & \StudentId \\[0.55cm]
+    指导教师： & \Instructor \\
+  \end{tabular}
+  \vfill
+  \thispagestyle{empty}
+\end{titlepage}
+
+% 第 2 页为目录，不显示页眉页脚；第 3 页起正文从第 1 页计页码。
+\clearpage
+\thispagestyle{empty}
+\setcounter{tocdepth}{2}
+\begingroup
+\small
+\tableofcontents
+\endgroup
+\clearpage
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+\section{实验概述}
+\subsection{实验目的}
+本实验面对的是一个已经给出 RTL 源码的 32 位 MiniMIPS32 处理器。我们的任务不是只把源码编译通过，而是沿着一条指令走一遍：它怎样被取出、怎样知道自己是加法还是访存、结果怎样经过流水线，遇到数据来不及时又怎样等待。为此，报告把处理器分成“板级系统连接、五段流水线、暂停与异常”三部分，并把每个模块的输入、输出和判断条件写清楚。
+
+
+\section{MiniMIPS32原型系统顶层设计}
+图\ref{fig:system-top}采用“处理器到板级资源”的视角，重点说明处理器如何通过 \texttt{dev\_if} 访问指令 ROM、数据 RAM 和 I/O 译码模块，而不是展开五级流水线内部。图左侧的 \texttt{sys\_clk\_100M} 先进入时钟管理模块 \texttt{clk\_wiz\_0}，再得到 \texttt{cpu\_clk\_50M} 并送入 \texttt{MiniMIPS32}。顶层 RTL 中，这个 50 MHz 时钟也连接到指令 ROM、数据 RAM 和 \texttt{io\_dec}；为了突出主要数据路径，图中没有把这些并行的时钟线全部画出。\texttt{sys\_rst\_n} 中的 \texttt{\_n} 表示低有效，因此 \texttt{sys\_rst\_n=0} 时复位有效，且 \texttt{RST\_ENABLE} 定义为 \texttt{1'b0}。图只在处理器一侧画出了复位入口；从顶层 RTL 可知，同一复位信号还送到 \texttt{dev\_if} 和 \texttt{io\_dec}，以关闭无效访问并清零外设寄存器。
+
+处理器的两类访问先汇集到 \texttt{dev\_if}。取指时，\texttt{MiniMIPS32} 输出 \texttt{iaddr} 和 \texttt{ice}，\texttt{dev\_if} 转换为 \texttt{inst\_addr}、\texttt{inst\_ce} 后访问指令 ROM，ROM 返回 \texttt{inst}。数据访问时，处理器输出 \texttt{dce}、\texttt{daddr}、\texttt{we} 和 \texttt{din}；\texttt{dev\_if} 根据 \texttt{daddr[31:16]} 是否等于 \texttt{IO\_ADDR\_BASE=16'hbfd0} 选择数据 RAM 或 \texttt{io\_dec}。前者经 \texttt{data\_addr/data\_we/data\_din} 访问，后者经 \texttt{io\_addr/io\_we/io\_din} 访问；读回数据分别为 \texttt{data\_dout}、\texttt{io\_dout}，再由 \texttt{dev\_if} 选择后返回处理器的 \texttt{dm} 端口。图中未单独画出 \texttt{data\_ce} 与 \texttt{io\_ce}，但 RTL 用它们保证同一笔访问不会同时使 RAM 和 I/O 响应。这就是存储器映射 I/O：CPU 使用同一组访存指令，通过地址而不是专用外设指令访问板级设备。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/minimips32_system_top_cropped.pdf}
+  \caption{MiniMIPS32 原型系统顶层设计图}
+  \label{fig:system-top}
+\end{figure}
+
+图中的箭头只保留了主通路；表\ref{tab:system-signals}再结合 RTL 补充使能与读回信号。
+
+{\small
+\begin{longtable}{p{0.23\linewidth}p{0.24\linewidth}p{0.43\linewidth}}
+\caption{原型系统顶层主要信号说明}\label{tab:system-signals}\\
+\toprule
+信号 & 英文含义与方向 & 在本实验中的作用 \\
+\midrule
+\endfirsthead
+\toprule
+信号 & 英文含义与方向 & 在本实验中的作用 \\
+\midrule
+\endhead
+\texttt{sys\_clk\_100M}、\texttt{cpu\_clk\_50M} & system clock；CPU clock。前者输入时钟模块，后者由时钟模块输出。 & 图中画出 \texttt{cpu\_clk\_50M} 送入 CPU；RTL 还将它接到两块存储器和 I/O 译码模块。100 MHz 到 50 MHz 是统一工作节拍，不表示 CPU 在一个周期内执行两次运算。 \\
+\texttt{sys\_rst\_n} & system reset, active low，系统低有效复位。 & 图中从板级输入进入 CPU；RTL 同时把它送给 \texttt{dev\_if} 和 \texttt{io\_dec}。为 0 时，取指和存储器/I/O 使能被关闭，外设寄存器回到已知初值。 \\
+\texttt{iaddr}、\texttt{ice}、\texttt{inst} & instruction address；instruction chip enable；instruction。前两者由 CPU 指向 \texttt{dev\_if}，\texttt{inst} 返回 CPU。 & \texttt{dev\_if} 将前两者送为 ROM 侧的 \texttt{inst\_addr/inst\_ce}；ROM 读出的 32 位 \texttt{inst} 再经 \texttt{dev\_if} 返回 IF 段。复位时 \texttt{inst\_ce} 为 0，因此不会取入无效指令。 \\
+\texttt{dce}、\texttt{daddr}、\texttt{we}、\texttt{din}、\texttt{dm} & data chip enable；data address；write enable；data in；data memory data。前四项由 CPU 指向 \texttt{dev\_if}，\texttt{dm} 从 \texttt{dev\_if} 返回 CPU。 & \texttt{dce} 表示数据访问有效，\texttt{daddr} 是地址，\texttt{we} 是 4 位字节写使能，\texttt{din} 是待写数据。\texttt{dev\_if} 的读回端口名为 \texttt{dout}，该信号接到 CPU 的 \texttt{dm}；它来自数据 RAM 或 I/O 的被选读回数据。 \\
+\texttt{data\_ce}\newline\texttt{data\_we}\newline\texttt{data\_addr}\newline\texttt{data\_din} & data memory chip enable/write enable/address/data in。由 \texttt{dev\_if} 指向数据 RAM。 & 这组信号是普通 RAM 路径。只有地址不属于 I/O 区间且 \texttt{dce} 有效时，\texttt{data\_ce} 才会有效；因此数据 RAM 不会同时响应一笔 I/O 访问。 \\
+\texttt{io\_ce}\newline\texttt{io\_we}\newline\texttt{io\_addr}\newline\texttt{io\_din} & I/O chip enable/write enable/address/data in。由 \texttt{dev\_if} 指向 \texttt{io\_dec}。 & 这组信号是 I/O 路径。\texttt{io\_we} 由 \texttt{|we} 得到，只要 4 个字节写使能中有任意一位为 1，I/O 就把这次访问当作写操作；具体写哪个外设再由 \texttt{io\_dec} 继续判断地址。 \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{I/O地址与测试观察点}
+\texttt{io\_dec} 是图中连接板级外设输出的译码模块。它对低 16 位地址继续译码：普通 LED、RGB LED 0、RGB LED 1、七段数码管和定时器的地址分别为 \texttt{0xf000}、\texttt{0xf100}、\texttt{0xf104}、\texttt{0xf200} 和 \texttt{0xe000}。图中由该模块输出 \texttt{led}、\texttt{led\_rgb0}、\texttt{led\_rgb1}、\texttt{num\_csn} 和 \texttt{num\_a\_g} 到板级外设；这五项是译码后的显示/驱动结果，不等同于 CPU 最初发出的 \texttt{io\_din}。
+
+可以把一次写 LED 看成一个很具体的例子：CPU 执行一条写存储器指令，先把地址和待写数据送到 \texttt{dev\_if}；只有地址落在 LED 的地址处、并且这次确实是写操作时，\texttt{io\_dec} 才产生 \texttt{led\_we}（LED write enable，普通 LED 写使能）。随后时钟上升沿到来，LED 寄存器才接收 \texttt{data\_i}。RGB LED 和数码管也各有自己的写使能，因此写普通 LED 不会顺便改变其他外设。这就是为什么 RTL 要分别设置 \texttt{led\_we}、\texttt{led\_rgb0\_we}、\texttt{led\_rgb1\_we} 和 \texttt{num\_we}：它们相当于四个独立的“写入许可”，而不是一直有效的输出。
+
+实际写外设时，\texttt{din} 先经过字节顺序调整得到 \texttt{data\_i}，再在 \texttt{cpu\_clk\_50M} 的上升沿写入目标外设寄存器。代码要求 \texttt{ce=1}，并按 \texttt{\{led\_we, led\_rgb0\_we, led\_rgb1\_we, num\_we\}} 的四位组合选择唯一目标。也就是说，一次写 LED 的操作不会顺便改写 RGB LED 或数码管；如果地址不匹配上述四个外设，四种寄存器 \texttt{hold} 原值。数码管写入的是 \texttt{num\_data}，之后由分频计数器轮流选择 8 个位选 \texttt{num\_csn}，并用 \texttt{num\_a\_g} 输出当前数字对应的七段码。这解释了“写一次 32 位数”与“8 位数码管持续显示”之间的关系。
+
+\section{MiniMIPS32处理器顶层设计与数据通路}
+MiniMIPS32 采用哈佛结构：取指和数据读写走两套接口，因此一条指令在访问数据 RAM 时，下一条指令仍可以从指令 ROM 取出。处理器从左到右依次经过 IF、ID、EXE、MEM、WB 五段。它们分别是 Instruction Fetch（取指）、Instruction Decode（译码）、Execute（执行）、Memory access（访存）和 Write Back（写回）。相邻两段之间的 IF/ID、ID/EXE、EXE/MEM、MEM/WB 是流水段寄存器。它们在时钟沿把一条指令当前已经得到的数据和控制信息保存下来，下一拍再交给后一段，而不是让一条指令在一个时钟周期内穿过全部模块。
+
+“五级流水”不是一条指令被同时做五件事。以两条相邻指令 I1、I2 为例：第 1 拍 I1 在 IF；第 2 拍 I1 进入 ID，同时 I2 开始 IF；第 3 拍 I1 进入 EXE，I2 进入 ID，下一条指令又可以取指。这样，同一拍中不同指令各做自己的一步，硬件就不会闲置。流水段寄存器像接力赛中的交接棒：它保存的不只是一个计算数值，还保存“这是谁的结果、下一站要不要写寄存器、要不要访问存储器”等信息。少带一项，后级就可能把上一条指令的控制信号错用到下一条指令上。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/minimips32_cpu_datapath.pdf}
+  \caption{MiniMIPS32 处理器顶层数据通路}
+  \label{fig:cpu-top}
+\end{figure}
+
+图\ref{fig:cpu-top}的上半部分是两套外部接口。指令侧中，IF 段输出 \texttt{iaddr}（instruction address，指令地址）和 \texttt{ice}（instruction chip enable，指令存储器使能）；指令存储器返回 \texttt{inst}（instruction，32 位指令）。数据侧中，MEM 段输出 \texttt{dce}（data chip enable，数据访问使能）、\texttt{daddr}（data address，数据地址）、\texttt{we}（write enable，4 位字节写使能）和 \texttt{din}（写入数据），数据存储器返回 \texttt{dm}（data memory data，数据存储器读数据）。\texttt{dm} 进入 WB 段，是因为 load 指令要把从存储器读出的值写回通用寄存器；store 指令则主要使用 \texttt{we} 和 \texttt{din}，通常不会把 \texttt{dm} 写回。
+
+图中绿色大框表示 \texttt{MiniMIPS32} 的内部。ID 段除了把 \texttt{inst} 译成运算类型和寄存器编号外，还需要处理数据相关。例如，当前指令马上要读取的寄存器值，可能还没有等到较早指令真正写回。RTL 中 ID 段接收 \texttt{exe2id\_wreg/wa/wd} 和 \texttt{mem2id\_wreg/wa/wd}，分别是 EXE、MEM 阶段可前推的“是否写寄存器、写哪个寄存器、要写的数据”。当寄存器编号匹配时，ID 直接选用前推数据，而不等待寄存器堆更新。这就是图中返回 ID 的前推通路。前推只解决“结果已经产生但尚未写回”的相关；如果前一条是 load，数据仍在等待存储器返回，ID 会提出 \texttt{stallreq\_id}，不能把旧值当作正确操作数。
+
+SCU 是 Stall Control Unit，即暂停控制单元。它接收 ID 和 EXE 提出的 \texttt{stallreq\_id}、\texttt{stallreq\_exe}，再输出多位 \texttt{stall} 信号给 PC 和各段间寄存器。不过\texttt{stallreq}仅仅表示存在停顿，而 \texttt{stall} 才是 SCU 给整条流水线下达的具体安排。加载相关时得到 \texttt{stall=0111}：PC 和前两级暂缓，ID/EXE 放入 \texttt{nop}，让后面的 MEM、WB 继续完成旧指令。除法尚未结束时得到 \texttt{stall=1111}：PC、IF/ID、ID/EXE \texttt{hold}，EXE/MEM 则写入 \texttt{nop}，MEM/WB 继续按时钟锁存。两种现象都叫暂停，但一个是在等 load 数据，一个是在等除法器完成，寄存器动作并不相同。
+
+\texttt{cp0\_reg} 是 Coprocessor 0 register，中文通常称 CP0 控制寄存器组。它位于处理器内部，不是图外的独立外设。它保存异常处理需要的状态，例如异常 PC、异常原因和状态位；发生异常时，CP0 产生 \texttt{flush} 和 \texttt{cp0\_excaddr} 等控制信息，使 PC 转向异常入口，并取消流水线中不应继续执行的旧指令。
+
+\section{五段流水及流水段寄存器模块}
+\subsection{模块关系}
+五级流水线把一条指令拆成 IF、ID、EXE、MEM、WB 五步完成。它们之间有 IF/ID、ID/EXE、EXE/MEM、MEM/WB 四组段间寄存器。段间寄存器的作用不只是把数据延后一拍，还要把这一条指令后续需要的控制信息一起保存。例如，ID/EXE 除了保存两个操作数，还要保存目的寄存器号、是否写回、是否访存、HI/LO 控制、CP0 地址、PC、延迟槽标记和异常信息。否则后一拍的 EXE 阶段会把不同指令的信息混在一起。
+
+
+
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/five_stage_pipeline_registers.pdf}
+  \caption{五段流水与四组流水段寄存器图}
+  \label{fig:pipeline-registers}
+\end{figure}
+
+\subsection{各模块的主要功能、输入与输出}
+{\scriptsize
+\begin{longtable}{p{0.11\linewidth}p{0.25\linewidth}p{0.24\linewidth}p{0.20\linewidth}}
+\toprule
+模块 & 主要功能 & 关键输入 & 关键输出 \\
+\midrule
+\endhead
+\texttt{if\_stage} & 保存 PC，选择下一条取指地址，并给出取指异常信息。 & 时钟、复位；\texttt{jump\_addr\_1/2/3}、\texttt{jtsel}；\texttt{stall}、\texttt{flush}、\texttt{cp0\_excaddr}。 & \texttt{pc}、\texttt{pc\_plus\_4}、\texttt{iaddr}、\texttt{ice}、\texttt{if\_exccode\_o}、\texttt{if\_badvaddr\_o}。 \\
+\texttt{ifid\_reg} & 把 IF 的 PC、\texttt{PC+4} 和取指异常上下文交给 ID；可以清空、\texttt{hold} 或送入 \texttt{nop} 上下文。 & 时钟、复位；IF 输出组；\texttt{stall}、\texttt{flush}。 & \texttt{id\_pc}、\texttt{id\_pc\_plus\_4}、\texttt{id\_exccode}、\texttt{id\_badvaddr}。 \\
+\texttt{id\_stage} & 译码、读寄存器、生成立即数和转移地址；选择 GPR 前推数据并检测加载相关。 & \texttt{id\_pc\_i}、\texttt{pc\_plus\_4}、\texttt{id\_inst\_i}、\texttt{rd1/rd2}；EXE/MEM 前推组；异常组和 \texttt{flush\_im}。 & 运算与写回组、\texttt{id\_src1\_o/id\_src2\_o}、转移组、寄存器堆读控制、\texttt{stallreq\_id}、CP0 与异常组。 \\
+\texttt{idexe\_reg} & 把 ID 指令的完整执行上下文锁存到 EXE；在 \texttt{bubble} 时输出 \texttt{nop}，在全停时 \texttt{hold}。 & 时钟、复位；ID 的运算、写回、访存、HI/LO、CP0、PC、延迟槽、异常组；\texttt{stall}、\texttt{flush}。 & 对应的 \texttt{exe\_*} 组与 \texttt{next\_delay\_o}。 \\
+\texttt{exe\_stage} & 执行算术逻辑、移位、乘除、HI/LO、CP0 操作；报告溢出和除法暂停请求。 & ID/EXE 输出；HI/LO 与 CP0 前推组。 & 运算结果、写回/访存/HI--LO/CP0 组、\texttt{stallreq\_exe} 和异常组。 \\
+\texttt{exemem\_reg} & 把 EXE 结果与异常上下文锁存到 MEM；\texttt{stall[3]=1} 时向 MEM 注入 \texttt{nop}，不 \texttt{hold} 旧值。 & 时钟、复位；EXE 输出、CP0 写组、异常组；\texttt{stall}、\texttt{flush}。 & 对应的 \texttt{mem\_*} 组。 \\
+\texttt{mem\_stage} & 生成数据存储器访问和字节使能，检查访存对齐，整理送 CP0 的异常上下文。 & EXE/MEM 输出、WB 到 MEM 的 CP0 旁路、\texttt{cp0\_status/cause}。 & \texttt{dce/daddr/we/din}、\texttt{dre}、\texttt{sign}、MEM/WB 直通组和 CP0 异常组。 \\
+\texttt{memwb\_reg} & 把 MEM 的写回、HI/LO、CP0 和加载符号标志锁存到 WB；无 \texttt{stall} 输入。 & 时钟、复位；MEM 输出、CP0 写组、\texttt{mem\_sign}、\texttt{flush}。 & 对应的 \texttt{wb\_*} 组。 \\
+\texttt{wb\_stage} & 选择 ALU 或存储器结果，完成读字节/半字的字节选择和符号或零扩展，再输出写回信息。 & MEM/WB 输出、\texttt{dm}、\texttt{sign}、CP0 写组。 & \texttt{wb\_wa\_o}、\texttt{wb\_wreg\_o}、\texttt{wb\_wd\_o}、HI/LO 与 CP0 写回组。 \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{各模块流程图}
+
+\subsubsection{IF 阶段与 IF/ID 流水段寄存器}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/if_stage_flow.pdf}
+  \caption{IF 模块流程图}
+  \label{fig:flow-if}
+\end{figure}
+IF 的核心是 PC 更新。PC 可以看成“下一条要读哪一格指令”的地址；一条 MIPS 指令占 4 个字节，所以普通顺序执行时下一地址是 \texttt{PC+4}。遇到 \texttt{j}、\texttt{jr} 或条件分支时，\texttt{jtsel} 才会改选对应的跳转地址。\texttt{flush} 有效时，说明异常或返回已经决定了新位置，PC 不再使用普通跳转结果，而改为 \texttt{cp0\_excaddr}；\texttt{stall[0]=1} 时，PC \texttt{hold}，处理器不会越过还未处理好的指令。
+
+此外，还要区分“PC 不动”和“ROM 不读”。\texttt{ice} 是指令存储器使能。地址例如 \texttt{0x00000002} 的低两位不是 \texttt{00}，不能作为一条 32 位指令的起点；此时 IF 同时给出 \texttt{EXC\_ADEL} 和 \texttt{if\_badvaddr\_o}，不再把错误地址交给 ROM。\texttt{ice} 的判断条件如下：
+
+\begin{center}
+\begin{tabular}{p{0.34\linewidth}p{0.17\linewidth}p{0.33\linewidth}}
+\toprule
+发生的情况 & \texttt{ice} & 原因 \\
+\midrule
+\texttt{ce=0} & 0 & 处理器未启用取指。 \\
+\texttt{flush=1} & 0 & PC 将改到异常入口或返回地址，不再接收原地址的指令。 \\
+\texttt{stall[1]=1} & 0 & IF/ID 暂停，不能重复取入同一条指令。 \\
+\texttt{iaddr[1:0]$\ne$2'b00} & 0 & 地址不是 4 字节对齐，取指异常。 \\
+其余情况 & 1 & 正常从指令 ROM 取指。 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这里的两位暂停信号作用不同。\texttt{stall[0]} 决定 PC 是否保持原值，\texttt{stall[1]} 决定本拍是否继续使能指令 ROM。以 \texttt{stall=4'b0111} 为例，PC 不再前进，\texttt{ice} 也为 0，IF/ID 因而不会重复接收同一条指令；\texttt{stall=4'b1111} 时这两个条件同样成立。暂停请求撤销后，PC 才重新按 \texttt{pc\_next} 更新。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/ifid_register_flow.pdf}
+  \caption{IF/ID 流水段寄存器流程图}
+  \label{fig:flow-ifid}
+\end{figure}
+IF/ID 是取指和译码之间的交接处。它在时钟沿保存四类东西：当前 PC、\texttt{PC+4}、取指异常码和错误地址。ID 下一拍要用这些信息：例如 \texttt{PC+4} 不只是“下一个地址”，还会在 \texttt{jal} 中用于形成返回地址，在分支中用于计算目标地址。复位或 \texttt{flush} 时，IF/ID 清空为初值和 \texttt{EXC\_NONE}，等价于告诉 ID“这一拍没有一条真正的指令需要继续”。
+
+暂停时要看两位而不是只看 \texttt{stall[1]}。当 \texttt{stall[1]=1,stall[2]=0}，前面的 IF 不能推进，而 ID 还能继续处理旧内容，IF/ID 不能把同一条指令再送一次，所以输出 \texttt{nop} 上下文；当 \texttt{stall[1]=1,stall[2]=1}，代码没有写入新值，原内容才会 \texttt{hold}。公开学习版不包含其他小组的仿真截图；如需补充该类实验结果，应使用本人完成或已获明确授权的原始证据。
+
+\subsubsection{ID 阶段与 ID/EXE 流水段寄存器}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/id_stage_flow.pdf}
+  \caption{ID 模块流程图}
+  \label{fig:flow-id}
+\end{figure}
+ID 的输入是 IF/ID 给出的指令和 PC，以及寄存器堆读数据。它首先把 32 位指令拆成若干字段：\texttt{op} 表示大类，\texttt{rs/rt/rd} 表示寄存器编号，\texttt{imm} 是立即数。比如 \texttt{addiu \$1,\$0,5} 中，ID 要认出它是“寄存器加立即数”，读出 \$0，再准备数值 5，并决定最后把结果写到 \$1；\texttt{sw \$1,0(\$0)} 则要读出 \$1 作为待存数据，却不需要写回通用寄存器。可见 ID 不只是翻译指令，它还要把指令字段变成后续各级要使用的操作数和控制信号。
+
+ROM 的字节存放顺序与 CPU 内部看到的指令字顺序不同，所以 ID 先重排字节；\texttt{flush\_im} 有效时，输入指令直接置零，防止刚从 ROM 返回的旧指令在异常后继续译码。随后 ID 输出 ALU 操作、两个源操作数、目的寄存器、写回/访存控制、跳转地址与异常码。读寄存器时，它优先检查 EXE 和 MEM 是否已经算出了同一寄存器的新值；有就前推，没有才读寄存器堆。可是 \texttt{lw} 的数据要到 MEM 读完存储器后才出现，因此 \texttt{lw \$2,0(\$0)} 后紧接 \texttt{add \$3,\$2,\$2} 时，ID 不能前推一个还不存在的数据，只能提出 \texttt{stallreq\_id} 请求。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/idexe_register_flow.pdf}
+  \caption{ID/EXE 流水段寄存器流程图}
+  \label{fig:flow-idexe}
+\end{figure}
+ID/EXE 是本组重点分析的段间寄存器。它的输入来自 ID 的所有执行上下文，输出名由 \texttt{id\_*} 改为 \texttt{exe\_*}。这里的“上下文”可以用 \texttt{sw \$1,0(\$0)} 来理解：EXE 不但需要 \$0 和偏移量算地址，MEM 以后还必须拿到 \$1 的原始数据去写存储器，同时 WB 必须知道这条指令不写通用寄存器。如果只把算术操作数打入寄存器，后面的 store 就会失去要写的数据或错误地产生写回。
+
+因此，\texttt{exe\_src1/exe\_src2} 给 ALU 提供操作数，\texttt{exe\_wa/exe\_wreg} 说明以后是否写通用寄存器，\texttt{exe\_mreg/exe\_din} 保存访存选择和 store 数据，另外还保存 HI/LO、CP0、PC、延迟槽和异常信息。
+
+该模块的优先级可以直接从 \texttt{idexe\_reg.v} 的三个条件分支读出。\texttt{reset} 或 \texttt{flush} 的优先级最高，输出的 \texttt{exe\_aluop} 写成 SLL，所有写使能关闭，异常码写成 \texttt{EXC\_NONE}。这表示 \texttt{nop}，而不是让一条已取消的指令继续执行。\texttt{normal} 情况下 \texttt{stall[2]=0}，模块在时钟沿锁存全部 ID 输入。若 \texttt{stall[2]=1} 且 \texttt{stall[3]=0}，ID 停止而 EXE 仍可运行，模块必须向 EXE 插入 \texttt{nop}，不能 \texttt{hold} 原指令，否则同一条指令会再执行一次。若 \texttt{stall[2]=1} 且 \texttt{stall[3]=1}，代码没有新的赋值分支，寄存器 \texttt{hold} 原值。这就是 \texttt{bubble} 与 \texttt{hold} 的区别。
+
+\subsubsection{EXE与EXE/MEM模块}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/exe_stage_flow.pdf}
+  \caption{EXE 模块流程图}
+  \label{fig:flow-exe}
+\end{figure}
+EXE 接收 ID/EXE 已经锁存的操作数和控制信息。它真正“做运算”：\texttt{exe\_alutype\_i} 先说明是算术、逻辑、移位还是特殊操作，\texttt{exe\_aluop\_i} 再说明具体是加、减、与、或还是除法。普通结果从 \texttt{exe\_wd\_o} 送往 EXE/MEM。以 \texttt{MULT} 后紧跟 \texttt{MFLO} 为例：乘法已经得到新 LO，但还没有写进 HI/LO 寄存器时，MFLO 必须先从 MEM 或 WB 拿到新值，不能只读寄存器里旧的 LO。
+
+除法不同于加法，可能需要多个时钟周期。除法器尚未准备好时，EXE 给出 \texttt{stallreq\_exe=STOP}，表示“结果还不能交给下一段”；SCU 再把这个请求变成 \texttt{stall=1111}。ADD 或 SUB 溢出时，EXE 同时把异常码改为 \texttt{EXC\_OV}，交给后面的异常处理通路。也就是说，EXE 既产生数值，也产生“这个数值能不能继续往下走”的控制信息。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/exemem_register_flow.pdf}
+  \caption{EXE/MEM 流水段寄存器流程图}
+  \label{fig:flow-exemem}
+\end{figure}
+EXE/MEM 把 EXE 的运算结果、写回控制、访存数据、HI/LO、CP0 写信息和异常上下文交给 MEM。可以把它理解成“把 EXE 做好的半成品装箱交给 MEM”：算术指令会带着 ALU 结果，store 会额外带着待写数据，异常指令还要带着 PC 和错误信息。\texttt{reset} 或 \texttt{flush} 时这些字段都改成无效值。
+
+图\ref{fig:flow-exemem}中特别写明 \texttt{stall[3]=STOP} 的动作是“向 MEM 注入 \texttt{nop}，不 \texttt{hold}”。因为此时 EXE 的除法结果还没有完成；如果把未完成的结果当作有效指令送到 MEM，后面可能发生错误的访存或写回。把 \texttt{mem\_wreg}、\texttt{mem\_mreg} 等写使能关掉，就等于让 MEM 收到一条什么也不做的 \texttt{nop}。
+
+\subsubsection{MEM、MEM/WB与WB模块}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/mem_stage_flow.pdf}
+  \caption{MEM 模块流程图}
+  \label{fig:flow-mem}
+\end{figure}
+MEM 的地址直接取 \texttt{mem\_wd\_i}，因为EXE 已经把“基址 + 偏移量”算好了，MEM 不需要重复计算，只需按这 32 位数去访问数据存储器。因此 \texttt{mem\_wd\_i} 不是额外增加的一份数据，而是 EXE 计算结果在不同指令中的不同用途。
+
+MEM 根据访存指令种类产生 \texttt{dre[3:0]}、\texttt{we[3:0]} 和写数据 \texttt{din}。\texttt{lw/sw} 一次处理完整 32 位字；\texttt{lb/sb} 只处理其中一个字节；\texttt{lh/sh} 处理连续两个字节，因此字访问要求地址低两位为 \texttt{00}，半字访问要求最低位为 \texttt{0}。若地址不对齐，CP0 异常码会变成 ADEL 或 ADES，而 \texttt{dce} 被置为 0。这样一条错误的 \texttt{sw} 不会真的写坏数据存储器。读出的 \texttt{dm} 不在 MEM 内做扩展，而是连同 \texttt{dre}、\texttt{sign} 交给 WB 处理。
+
+单字节和半字访问的通道选择如下。对 load，表中的掩码写入 \texttt{dre}；对 store，写入 \texttt{we}。同一掩码让 MEM 和 WB 对同一个地址低位采用一致的字节位置。
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+指令类别 & \texttt{daddr[1:0]} & \texttt{dre/we} \\
+\midrule
+\texttt{lw/sw} & 任意（需字对齐） & \texttt{1111} \\
+\texttt{lb/lbu/sb} & \texttt{00/01/10/11} & \texttt{1000/0100/0010/0001} \\
+\texttt{lh/lhu/sh} & \texttt{00} & \texttt{1100} \\
+\texttt{lh/lhu/sh} & \texttt{10} & \texttt{0011} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth,trim=0.03in 0.03in 0.03in 0.03in,clip]{images/memwb_register_flow.pdf}
+  \caption{MEM/WB 流水段寄存器流程图}
+  \label{fig:flow-memwb}
+\end{figure}
+MEM/WB 是 MEM 到 WB 的最后一组段间寄存器。它保存目的寄存器号、通用寄存器写使能、ALU 结果、是否来自存储器、字节选择、HI/LO、CP0 写信息和 \texttt{sign}。这一步的意义是把 MEM 的组合输出固定一拍：WB 在整个周期里看到的是稳定的一组数据，而不是随 MEM 内部信号变化的临时值。把这些字段分成通用寄存器、访存、HI/LO 和 CP0 四类后，更容易检查一条指令需要携带的信息是否完整。
+
+\texttt{reset} 或 \texttt{flush} 时，\texttt{wb\_wreg}、\texttt{wb\_whilo}、\texttt{wb\_cp0\_we} 都关闭，避免一个已经取消的指令在最后一步仍写进寄存器。该模块没有 \texttt{stall} 端口，所以在 \texttt{stall=1111} 时，它仍会在时钟沿锁存 MEM 输出；这一点与 ID/EXE 的 \texttt{hold} 行为不同。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/wb_stage_flow.pdf}
+  \caption{WB 模块流程图}
+  \label{fig:flow-wb}
+\end{figure}
+WB 决定写回通用寄存器的数据。\texttt{wb\_mreg\_i=0} 时直接使用 EXE 计算结果；为 1 时，从 \texttt{dm} 取回存储器数据，依据 \texttt{wb\_dre\_i} 选中一个字、半字或字节，并按 \texttt{sign} 做符号扩展或零扩展。以 \texttt{LBU} 为例，内存字节 \texttt{0x80} 表示无符号数 128，必须扩成 \texttt{0x00000080}；而 \texttt{LB} 把同一字节当作有符号数，才应扩成 \texttt{0xffffff80}。HI/LO 和 CP0 写信息不经这一个数据选择器，直接输出给相应寄存器。
+
+公开学习版不包含其他小组的 WB 独立单元仿真波形。若用于课程提交，必须以本人完成或已获明确授权的测试截图替换，并同时记录测试输入、时序和结论。
+
+\section{流水线相关处理机制}
+\subsection{定向前推}
+MiniMIPS32 在译码级对通用寄存器源操作数进行前推。举例说，\texttt{add \$1,\$2,\$3} 刚在 EXE 算出结果，下一条指令立刻要读 \$1；若等到 WB 真正写进寄存器堆，就会多等几拍。于是当 EXE 或 MEM 阶段将写某目的寄存器且地址等于当前指令的 \texttt{rs} 或 \texttt{rt} 时，译码级多路选择器优先取前推数据。HI/LO 和 CP0 的读取发生在执行级，因此分别由 MEM、WB 阶段向 EXE 前推最新写入值。前推能解决“结果已算出、只是还没写回”的情况；结果尚未从数据存储器读出的 load 相关仍必须暂停。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/forwarding_datapath.pdf}
+  \caption{定向前推数据通路图}
+  \label{fig:forwarding}
+\end{figure}
+
+\subsection{转移指令与延迟槽}
+译码级支持 \texttt{J}、\texttt{JAL}、\texttt{JR}、\texttt{JALR}、\texttt{BEQ}、\texttt{BNE}、\texttt{BLEZ}、\texttt{BGTZ}、\texttt{BLTZ}、\texttt{BGEZ}、\texttt{BLTZAL} 和 \texttt{BGEZAL}。它生成三类转移地址：伪直接地址、PC 相对地址和寄存器地址；\texttt{jtsel} 据此选择下一条 PC。课程实现采用延迟转移：转移指令后面紧跟的一条指令已经被取出，因此仍要执行，这一条就叫延迟槽指令。比如 \texttt{beq} 判断成立后，PC 会去目标地址，但它后面的一条指令不能凭空消失；处理器用延迟槽标志把这条指令的身份带到后面，异常发生时 CP0 才能正确记录 EPC。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/branch_control_flow.pdf}
+  \caption{转移指令控制流程图}
+  \label{fig:branch}
+\end{figure}
+
+\subsection{暂停机制}
+暂停由 \texttt{scu} 统一安排。执行级的多周期除法请求使 \texttt{stall}=4'b1111；译码级检测到加载相关时使 \texttt{stall}=4'b0111。EXE 的暂停请求优先于 ID，因为除法器还未给出结果时，先解决 ID 的短暂停顿没有意义。
+
+两种值不能混为一谈。\texttt{0111} 相当于“先让后面把已有的事情做完，ID/EXE 放一条 \texttt{nop}”，防止相关指令带着旧数据进入 EXE；\texttt{1111} 相当于“除法正在算，PC、IF/ID 和 ID/EXE 先别换新内容”，同时 EXE/MEM \texttt{bubble}，MEM/WB 照常锁存。看 \texttt{stall} 的二进制数还不够，必须回到每个寄存器自己的条件分支，才能知道它是 \texttt{hold}、\texttt{bubble} 还是 \texttt{normal} 更新。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/stall_control_flow.pdf}
+  \caption{暂停控制流程图}
+  \label{fig:stall}
+\end{figure}
+
+\section{异常处理}
+\subsection{CP0与精确异常}
+异常信息会随流水线从产生它的阶段传到 MEM：IF 检测取指地址错误，ID 检测保留指令和 \texttt{SYSCALL}，EXE 检测溢出，MEM 检测数据地址错误和外部中断。把异常放到 MEM 集中处理的好处是：前面各级只负责报告“哪里出了什么问题”，由一个位置统一决定是否响应，避免同一条指令被重复处理。
+
+CP0 像处理器的异常记录本。\texttt{Status} 记录是否允许中断和是否已经在异常处理中；\texttt{Cause} 记录异常类别；\texttt{EPC} 记录返回位置；\texttt{BadVAddr} 记录错误访问地址。当异常需要响应时，CP0 发出 \texttt{flush}，IF/ID、ID/EXE、EXE/MEM 和 MEM/WB 四组段间寄存器都清除尚未提交的流水线信息，PC 改到异常入口。\texttt{ERET} 使用 EPC 恢复返回地址并退出异常级。这里的“精确”不是说异常瞬间没有其他指令在流水线里，而是说异常处理完成后，出错指令之前的结果已经提交，出错指令及其后的结果不会错误写入。
+
+公开学习版不包含其他小组的 \texttt{cp0\_reg} 独立单元测试波形。课程提交时必须以本人完成或已获明确授权的测试记录替换，不能将他组结果表述为自己的实验事实。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/exception_control_flow.pdf}
+  \caption{异常处理流程图}
+  \label{fig:exception}
+\end{figure}
+
+\section{实验验证与结果分析}\label{sec:experiments}
+本节集中放置本人在 Vivado 2025.2 中完成并保存的行为仿真记录。顺序从一次 I/O 写事务开始，再观察 ID/EXE 的流水线控制，然后运行功能点程序，最后执行 Fibonacci C 程序。这样既能从局部信号看到模块怎样动作，也能看到完整程序最终走到哪一条输出路径。表\ref{tab:idexe-tb}和图\ref{fig:io-test}、图\ref{fig:idexe-testbench-wave}、图\ref{fig:your-func}、图\ref{fig:fibonacci-c-sim}均为本组实际观察的记录；前文中其他组的波形仍只用于模块原理说明。
+
+\subsection{I/O 写事务验证}
+本次 I/O 波形记录的是功能点程序产生的四次独立写事务。波形中，\texttt{data\_i} 在相应外设的写使能脉冲有效时被锁存，随后能看到目标 LED/RGB 输出更新。这里能得出的结论是：地址译码、独立写使能和外设寄存器更新与 \texttt{io\_dec} 的条件分支一致。这一组最直接的写事务记录放在最前面，后面的流水线控制和程序测试都要经过同一条 I/O 输出路径。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/io_test_write_wave_cn.pdf}
+  \caption{I/O 外设独立写事务波形（约 1.0--1.1 \textmu s；写入数据 \texttt{data\_i} 在普通 LED、RGB 灯 0、RGB 灯 1 和七段数码管的独立写使能脉冲下分别更新）}
+  \label{fig:io-test}
+\end{figure}
+
+\subsection{ID/EXE 流水段寄存器 TestBench 验证}
+本组用 TestBench 验证 ID/EXE 在 \texttt{reset}、\texttt{normal}、\texttt{bubble}、\texttt{hold}、\texttt{flush} 五种状态下的输出。测试在时钟下降沿记录 \texttt{stall}、PC、各级 PC、\texttt{exe\_aluop}、\texttt{exe\_wreg}、HI/LO 和 CP0 状态。分析时先由 \texttt{stall} 判断当前是 \texttt{normal}、\texttt{bubble} 还是 \texttt{hold}，再看 \texttt{exe\_aluop} 和 \texttt{exe\_wreg} 判断 EXE 收到的是正常指令还是 \texttt{nop}，最后结合 PC、\texttt{div\_ready} 和 CP0 状态判断暂停或异常是否结束。原始 VCD 中没有 \texttt{flush} 信号，所以 \texttt{flush} 通过 PC 和 CP0 的变化判断。
+
+测试程序按地址依次执行下列指令：\texttt{0x00: addiu \$1,\$0,5}，\texttt{0x04: sw \$1,0(\$0)}，\texttt{0x08: lw \$2,0(\$0)}，\texttt{0x0c: add \$3,\$2,\$2}，\texttt{0x10: div \$2,\$3}，\texttt{0x14: syscall}，异常入口 \texttt{0x100} 为 \texttt{eret}。前两条指令用于观察正常传递；\texttt{lw} 紧跟使用 \$2 的 \texttt{add}，专门制造 load-use 相关；\texttt{div} 观察多周期 \texttt{hold}；\texttt{syscall} 与 \texttt{eret} 观察异常进入和返回。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/idexe_testbench_wave.png}
+  \caption{ID/EXE TestBench关键控制波形}
+  \label{fig:idexe-testbench-wave}
+\end{figure}
+
+波形从 630 ns 起给出逐拍数据。670 ns 时 EXE 为 \texttt{ADDIU}，690 ns 时为 \texttt{SW}，且 \texttt{stall=0000}，说明这两条指令在 ID/EXE 处 \texttt{normal} 推进。710--750 ns，\texttt{lw} 与后续 \texttt{add} 形成 load-use 相关，\texttt{stall=0111}。730 ns 和 750 ns 的 \texttt{exe\_aluop} 都为 SLL、\texttt{exe\_wreg=0}，这正是 ID/EXE 的 \texttt{nop} 输出；770 ns 才恢复 \texttt{ADD}，810 ns 可以看到 \$3 写回 \texttt{0x0000000a}。因此这里不是“暂停后直接算 add”，而是先插入两拍 \texttt{bubble}，等 \texttt{lw} 的 \$2=5 可前推后再执行加法。
+
+790--1170 ns，\texttt{stall=1111} 且 PC、\texttt{id\_pc}、\texttt{ex\_pc} 均 \texttt{hold} 在 \texttt{0x18}、\texttt{0x14}、\texttt{0x10}。1190 ns \texttt{div\_ready=1} 后暂停解除，说明 \texttt{div \$2,\$3} 正等待除法器完成。此时 IF/ID、ID/EXE \texttt{hold}；EXE/MEM 因 \texttt{stall[3]=1} 注入 \texttt{nop}；MEM/WB 没有 \texttt{stall} 输入，仍按时钟锁存 MEM 输出。因此 \texttt{stall=1111} 不是“所有段间寄存器 \texttt{hold}”，不同寄存器的动作要分别看。
+
+1250 ns 时 PC 变为 \texttt{0x100}，同时 \texttt{epc=0x14}、\texttt{status=0x10000002}（EXL 置位）、\texttt{cause=0x20}（异常码 8）。这与 \texttt{syscall} 进入异常入口一致。1330 ns PC 回到 \texttt{0x14}，EXL 清除，对应 \texttt{eret} 返回。
+
+\begin{longtable}{p{0.16\linewidth}p{0.35\linewidth}p{0.36\linewidth}}
+\caption{ID/EXE 流水段寄存器 TestBench 验证结果}\label{tab:idexe-tb}\\
+\toprule
+情形 & 原始记录中的观察点 & 与 \texttt{idexe\_reg} RTL 的对应结论 \\
+\midrule
+\endfirsthead
+\toprule
+情形 & 原始记录中的观察点 & 与 \texttt{idexe\_reg} RTL 的对应结论 \\
+\midrule
+\endhead
+\texttt{reset} & 事件记录在 150 ns 给出 \texttt{pc=0}、\texttt{ice=0}、\texttt{stall=0000}；该时段未列入本图的逐拍 VCD 数据。 & \texttt{reset} 时安全初态成立；ID/EXE 按复位分支输出 \texttt{nop}/零值。 \\
+\texttt{normal} & VCD 630 ns 开始取指；670 ns 为 \texttt{ADDIU}，690 ns 为 \texttt{SW}，\texttt{stall=0000}。 & \texttt{stall[2]=0} 时，ID 输入在时钟沿正常锁存到 EXE。 \\
+\texttt{bubble} & 710--750 ns 为 \texttt{stall=0111}；730、750 ns 的 \texttt{exe\_aluop=SLL}，\texttt{exe\_wreg=0}。 & 满足 \texttt{stall[2]=1,stall[3]=0}，ID/EXE 连续两拍向 EXE 注入 \texttt{nop}。 \\
+\texttt{hold} & 790--1170 ns 为 \texttt{stall=1111}；PC、IF/ID、ID/EXE \texttt{hold}，1190 ns \texttt{div\_ready=1} 后恢复。 & ID/EXE 在 \texttt{stall[2]=1,stall[3]=1} 时 \texttt{hold}。EXE/MEM \texttt{bubble}、MEM/WB 正常锁存，不能概括为四组段间寄存器都 \texttt{hold}。 \\
+\texttt{flush} & 1250 ns：\texttt{pc=0x100}、\texttt{epc=0x14}、EXL=1、异常码 8；1330 ns \texttt{eret} 返回 \texttt{0x14}。 & VCD 未直接记录 \texttt{flush}；这些 PC/CP0 变化与 \texttt{idexe\_reg} 的 \texttt{flush} 分支一致，因此只能间接支持异常清除路径。 \\
+\bottomrule
+\end{longtable}
+
+\subsection{功能点测试}
+本次行为仿真加载 \texttt{sim\_inst\_rom.coe} 和 \texttt{sim\_data\_ram.coe}。
+
+数码管地址在 \texttt{io\_dec.v} 中按低 16 位 \texttt{f200} 译码，功能测试程序把该地址装入 \texttt{s1}。每个测试例程先把本项编号装入 \texttt{a0} 的高字节；通过时执行 \texttt{addiu s3,s3,1}，随后执行 \texttt{or t0,a0,s3} 和 \texttt{sw t0,0(s1)}。因此数码管同时显示当前测试编号和累计通过数。程序中被调用的最后一个例程为 \texttt{n91\_jalr\_ex\_ds\_test}，其编号写为 \texttt{0x5A}；若该项通过，\texttt{s3} 也会增至 \texttt{0x5A}，写入值为 \texttt{5A00005A}。\texttt{io\_dec.v} 的字节重排对该值不改变数值，因为四个字节依次为 \texttt{5A}、\texttt{00}、\texttt{00}、\texttt{5A}。公开学习版未附带可公开核验的功能测试波形，是否通过必须由使用者按实际仿真记录确认。
+
+\begin{figure}[H]
+  \centering
+  \fbox{\rule{0pt}{5cm}\rule{0.88\linewidth}{0pt}}
+  \caption{待以本人完成或已获明确授权的功能点测试波形替换}
+  \label{fig:your-func}
+\end{figure}
+
+\subsection{Fibonacci C 程序测试}
+
+\texttt{soft/test\_c/src/fib.c} 中 \texttt{N=40}，\texttt{fib[0]} 和 \texttt{fib[1]} 初值均为 1。\texttt{main()} 从第 3 项开始按 \texttt{fib[i]=fib[i-1]+fib[i-2]} 递推，并把 \texttt{i=2\ldots39} 的 38 个递推结果逐项与 \texttt{ans[]} 中预先给出的正确结果比较；前两项由初值直接给定。只要其中一项不同，\texttt{flag} 就置为 0 并跳出循环；循环结束后，若 \texttt{i!=N}，\texttt{flag} 同样置为 0。前两项初值正确且 38 项递推结果都比较正确时，\texttt{flag} 保持为 1，最后由 \texttt{print\_result(flag)} 输出结果。\texttt{soc\_io.h} 定义 \texttt{BLUE=1}、\texttt{GREEN=2}、\texttt{RED=4}：成功路径先后向两个 RGB 寄存器写入蓝、绿并循环；失败路径则把两个 RGB 寄存器写为红。因此 RGB 的状态是程序比较结果的输出，而不是只凭“灯的颜色”直接猜测计算是否正确。
+
+教师工程已经给出本程序对应的 \texttt{soft/test\_c/build/fib\_inst.coe} 和 \texttt{fib\_data.coe}。开始时检查 Vivado 的 Block Memory Generator 配置，原始测试对应 \texttt{inst\_rom} 加载 \texttt{fib\_inst.coe}、\texttt{data\_ram} 加载 \texttt{fib\_data.coe}；前者提供 C 程序编译后的指令，后者提供 \texttt{fib[]} 初值和 \texttt{ans[]} 数据。随后启动 Behavioral Simulation，并加入 \texttt{led\_rgb0}、\texttt{led\_rgb1}、\texttt{led\_rgb0\_we}、\texttt{led\_rgb1\_we}、\texttt{led\_rgb0\_data}、\texttt{led\_rgb1\_data} 和 \texttt{pc} 等观察信号。
+
+第一次使用原始 \texttt{fib\_inst.coe} 进行行为仿真时，两个 RGB 很快写为 1。即使继续运行到约 10 ms，也没有立即看到后续颜色变化。PC 波形没有停在一个固定地址，而是在 \texttt{delay()} 对应的循环指令范围内反复变化。结合 \texttt{soc\_io.h} 可知，\texttt{DELAY\_COUNT} 原值为 5000000，\texttt{init()} 和成功路径中的每次颜色更新前都会调用 \texttt{delay()}。所以这里不是 CPU 卡死，也不是 Fibonacci 已经计算错误，而是行为仿真逐周期执行了面向真实 FPGA 肉眼观察所设置的大量延时循环。真实 FPGA 上保留这段延时是合理的；在 XSim 中直接等待则效率很低。
+
+Teacher 的原始 TestBench 停止时间为 \texttt{\#100000 \$stop;}，实验过程中曾临时延长为 \texttt{\#10000000 \$stop;}，以便观察程序运行。为缩短仿真时间，我没有改动教师原始 \texttt{fib\_inst.coe}，而是复制得到 \texttt{fib\_inst\_sim.coe}。反汇编显示，原文件中的 \texttt{4c00023c}、\texttt{404b4234} 对应 \texttt{delay()} 内构造 \texttt{0x004c4b40}（5000000）的两条指令；仿真副本只把它们改为 \texttt{0000023c}、\texttt{64004234}，构造 \texttt{0x00000064}（100）。也就是说，修改只缩短显示延时；Fibonacci 递推、40 项参考结果、逐项比较和成功/失败判定均保持不变。重新加载 ROM 后，最终行为仿真使用 \texttt{inst\_rom} 的 \texttt{fib\_inst\_sim.coe} 与 \texttt{data\_ram} 的 \texttt{fib\_data.coe}。缩短延时后，约百微秒已足以观察结果；原 Teacher 工程可恢复原始初始化配置。
+
+重新运行后，两个 RGB 输出同步从 1 变为 2，再回到 1，并在下一次更新进入 2，呈现 \texttt{1\ $\rightarrow$\ 2\ $\rightarrow$\ 1\ $\rightarrow$\ 2} 的循环。图\ref{fig:fibonacci-c-sim}中 \texttt{led\_rgb0\_we} 和 \texttt{led\_rgb1\_we} 在更新位置产生对应的写使能脉冲，\texttt{led\_rgb0\_data} 与 \texttt{led\_rgb1\_data} 同步写入 \texttt{0x00000001}、\texttt{0x00000002}、\texttt{0x00000001}、\texttt{0x00000002}。PC 在整个窗口内持续变化，说明处理器仍在执行程序，而不是停在 I/O 写入处。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{images/E03_fibonacci_c_sim_pass.png}
+  \caption{Fibonacci C 程序行为仿真结果}
+  \label{fig:fibonacci-c-sim}
+\end{figure}
+
+根据 \texttt{soc\_io.h}，数值 1 对应 BLUE，2 对应 GREEN，4 对应 RED。波形实际出现的是蓝、绿交替，没有进入红色失败路径。把这个现象与程序逻辑连起来看：\texttt{fib.c} 使用两个固定初值生成 40 项 Fibonacci 数列，并对 \texttt{i=2\ldots39} 的递推结果逐项和 \texttt{ans[]} 比较；全部比较正确时 \texttt{flag=1}；\texttt{print\_result(flag)} 因而进入蓝、绿循环；两个 RGB 的同步 \texttt{1\ $\rightarrow$\ 2\ $\rightarrow$\ 1\ $\rightarrow$\ 2}、写使能和写入数据又与该输出路径一致。由此可以判定此次 Fibonacci 测试程序成功执行。
+
+本次行为仿真表明，MiniMIPS32 能够正确执行该 C 程序编译生成的机器代码，Fibonacci 的两个初值及后续 38 项递推结果满足程序的比较判据，程序最终进入成功输出路径。这是对现有单模块 TestBench 和功能点测试的补充系统级验证，不是上板验证，也不能代表所有 C 程序均可正确执行。
+
+\section{实验心得}
+本次实验中，我遇到了很多问题。刚开始我很难理解 IF 阶段、IF/ID 流水段寄存器等部分的内容。后来学习了本组负责的 ID/EXE 流水段寄存器，再回头看其他小组负责的内容，就觉得容易理解很多。其中 \texttt{bubble}、\texttt{nop}、\texttt{hold} 等知识是共通的，只是各个流水段寄存器的具体动作不同。例如 \texttt{stall=0111} 时，IF/ID 流水段寄存器 \texttt{hold} 当前内容，ID/EXE 流水段寄存器向 EXE 注入 \texttt{nop}；而 \texttt{stall=1111} 时，PC、IF/ID 和 ID/EXE 都 \texttt{hold}，EXE/MEM 注入 \texttt{nop}，MEM/WB 则继续在时钟沿锁存 MEM 输出。通过这样的对比，我感觉这是一种迁移的学习方法：上学期学习《计算机组成原理》时，Cache 和 TLB 也有地址匹配等共通之处，先理解 Cache 后，再学习 TLB 会更容易；当然两者服务的对象不同，Cache 保存数据或指令，TLB 保存页表转换结果。
+
+除此之外，我一开始还难以记住许多缩写，例如 \texttt{we}。后来把它和 write enable 联系起来，并在 RTL 中反复看它从 MEM 阶段到 \texttt{dev\_if}、再到 \texttt{io\_dec} 的作用，才逐渐记住它是写使能，而不是一个孤立的字母组合。对 \texttt{dce}、\texttt{ice} 等信号也是一样：结合全称、所在模块和实际条件去记，比单独背缩写有效得多。
+
+我遇到的第三个问题是看不懂实验结果。借助 AI 的辅助并查阅资料后，我回到 TestBench、RTL 和波形中逐项核对，才弄清每一段测试的目的。测试程序刻意制造 \texttt{normal}、\texttt{bubble}、\texttt{hold} 和异常路径；\texttt{reset} 则由测试环境控制复位信号产生，并不是由某条指令制造。TestBench 在时钟下降沿记录 \texttt{stall}、各级 PC 等信号，用来观察这些状态下流水线是否按预期动作。\texttt{flush} 没有被原始 VCD 直接记录，因此只能根据 PC 跳到 \texttt{0x100}、\texttt{epc=0x14}、EXL 和异常码的变化，结合 RTL 作间接判断。理解这些对应关系后，我再看波形时就能知道哪些时间段对应 \texttt{bubble} 或 \texttt{hold}，也知道 \texttt{flush} 不能只凭一条波形线直接下结论。
+
+我遇到的第四个问题是对暂停的理解。一开始我参考的部分材料没有明确区分 \texttt{bubble}、\texttt{nop} 和 \texttt{hold}。后来查阅其他小组材料并对照 RTL 后，我才意识到这是需要重点区分的地方。\texttt{bubble} 描述的是流水线控制产生的空槽，在本工程中表现为向后一级送入 \texttt{nop}；\texttt{hold} 则是保留当前寄存器内容，两者不能混为一谈。我在讲报告时也重点区分了这几种情况。这个过程让我认识到，理解流水线不能只记 \texttt{stall} 的二进制值，还要逐个查看每一级寄存器在该条件下到底做了什么。
+
+\end{document}
