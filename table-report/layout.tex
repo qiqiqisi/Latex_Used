@@ -1,0 +1,58 @@
+% 依据“实验1.docx”的页面尺寸、页边距、表格栏目和栏目文字转写。
+% 源文件的文字处理软件专有字距与分页算法不能由 TeX 逐字节复现。
+\documentclass[UTF8,a4paper,12pt]{ctexart}
+% 填写学号、姓名、专业班级、课程、学期、教师、日期和实验课时间。
+\newcommand{\reportstudentid}{待填写}
+\newcommand{\reportstudentname}{待填写}
+\newcommand{\reportclass}{待填写}
+\newcommand{\reportcourse}{待填写}
+\newcommand{\reportterm}{待填写}
+\newcommand{\reportteacher}{待填写}
+\newcommand{\reportdate}{待填写}
+\newcommand{\reporttime}{待填写}
+\usepackage[left=20mm,right=20mm,top=26mm,bottom=23mm,footskip=8mm]{geometry}
+\usepackage{fontspec}
+\usepackage{array,longtable,graphicx}
+\IfFontExistsTF{SimSun}{%
+  \setCJKmainfont[AutoFakeBold=2]{SimSun}%
+}{%
+  \setCJKmainfont[AutoFakeBold=2]{FandolSong-Regular}%
+}
+\IfFontExistsTF{Times New Roman}{%
+  \setmainfont{Times New Roman}%
+}{%
+  \setmainfont{TeX Gyre Termes}%
+}
+\pagestyle{plain}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\arrayrulewidth}{0.45pt}
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+\newcommand{\reporttitle}{%
+  \begin{center}\fontsize{18pt}{22pt}\selectfont\bfseries
+    实\hspace{6.7mm}验\hspace{6.7mm}报\hspace{6.7mm}告
+  \end{center}\vspace{-2mm}%
+}
+\newcommand{\metatable}[1]{%
+  {\fontsize{10.5pt}{13pt}\selectfont\setlength{\tabcolsep}{0pt}%
+  \noindent\begin{tabular}{|
+    >{\centering\arraybackslash}m{20.2mm}|
+    >{\centering\arraybackslash}m{13.95mm}|
+    >{\centering\arraybackslash}m{10.6mm}|
+    >{\centering\arraybackslash}m{21.95mm}|
+    >{\centering\arraybackslash}m{28.15mm}|
+    >{\centering\arraybackslash}m{12.45mm}|
+    >{\centering\arraybackslash}m{6.7mm}|
+    >{\centering\arraybackslash}m{21.55mm}|
+    >{\centering\arraybackslash}m{32.55mm}|}
+  \hline
+  \rule{0pt}{8mm}学\quad 号 & \multicolumn{2}{>{\centering\arraybackslash}m{24.71mm}|}{\reportstudentid} & 姓\quad 名 & \reportstudentname & \multicolumn{2}{>{\centering\arraybackslash}m{19.31mm}|}{专业班级} & \multicolumn{2}{>{\centering\arraybackslash}m{54.26mm}|}{\reportclass} \\ \hline
+  \rule{0pt}{8mm}课程名称 & \multicolumn{4}{>{\centering\arraybackslash}m{75.13mm}|}{\bfseries\reportcourse} & \multicolumn{2}{>{\centering\arraybackslash}m{19.31mm}|}{学期} & \multicolumn{2}{>{\centering\arraybackslash}m{54.26mm}|}{\reportterm} \\ \hline
+  \rule{0pt}{8mm}任课教师 & \multicolumn{2}{>{\centering\arraybackslash}m{24.71mm}|}{\reportteacher} & 完成日期 & \multicolumn{2}{>{\centering\arraybackslash}m{40.76mm}|}{\reportdate} & \multicolumn{2}{>{\centering\arraybackslash}m{28.41mm}|}{实验课时间} & \reporttime \\ \hline
+  \multicolumn{2}{|>{\raggedright\arraybackslash}m{34.31mm}|}{\rule{0pt}{8mm}\hspace{1.9mm}实验名称} & \multicolumn{7}{>{\raggedright\arraybackslash}m{134.91mm}|}{\hspace{1.9mm}#1} \\ \hline
+  \end{tabular}\par}%
+}
+\newcommand{\bodytitle}[1]{\noindent{\bfseries #1}\par}
+\newcommand{\substep}[1]{\noindent{\bfseries #1}\par}
+\newcommand{\figcaption}[1]{\begin{center}\fontsize{10.5pt}{13pt}\selectfont #1\end{center}}
